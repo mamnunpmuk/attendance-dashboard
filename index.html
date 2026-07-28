@@ -322,7 +322,7 @@ function normalizeDate(val){
 // ---------- Try auto-loading data.xlsx from the same folder ----------
 async function tryAutoLoad(){
   try{
-    const res = await fetch('data.xlsx', {cache:'no-store'});
+    const res = await fetch('data.xlsx?v=' + Date.now(), {cache:'no-store'});
     if(!res.ok) throw new Error('not found');
     const buf = await res.arrayBuffer();
     const wb = XLSX.read(new Uint8Array(buf), {type:'array', cellDates:true});
@@ -380,8 +380,9 @@ document.getElementById('deptFilter').addEventListener('change', render);
 function initDateRange(){
   const dates = [...new Set(rawData.map(r=>r.Date))].filter(Boolean).sort();
   if(!dates.length) return;
-  document.getElementById('dateFrom').value = dates[0];
-  document.getElementById('dateTo').value = dates[dates.length-1];
+  const latest = dates[dates.length-1];
+  document.getElementById('dateFrom').value = latest;
+  document.getElementById('dateTo').value = latest;
 }
 document.getElementById('dateFrom').addEventListener('change', render);
 document.getElementById('dateFrom').addEventListener('input', render);
