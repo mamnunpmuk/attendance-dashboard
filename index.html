@@ -273,6 +273,47 @@ function generateSample(){
 let rawData = generateSample();
 let lineChart, pieChart;
 
+// ---------- Robust date normalization (handles Excel serials & various formats) ----------
+function pad(n){ return n.toString().padStart(2,'0'); }
+
+function normalizeDate(val){
+  if(val === null || val === undefined || val === "") return "";
+
+  // Excel serial date number (e.g. 46226)
+  if(typeof val === 'number' || /^\d{4,6}(\.\d+)?$/.test(val)){
+    const num = Number(val);
+    if(!isNaN(num) && num > 20000 && num < 90000){
+      const parsed = XLSX.SSF.parse_date_code(num);
+      if(parsed) return `${parsed.y}-${pad(parsed.m)}-${pad(parsed.d)}`;
+    }
+  }
+
+  const s = val.toString().trim();
+
+  // Already ISO: 2026-07-28
+  if(/^\d{4}-\d{2}-\d{2}/.test(s)) return s.slice(0,10);
+
+  // Slash formats: 7/28/2026 or 28/7/2026 or 2026/7/28
+  const parts = s.split(/[\/\-]/);
+  if(parts.length === 3){
+    let [a,b,c] = parts;
+    if(a.length === 4){ // YYYY/M/D
+      return `${a}-${pad(b)}-${pad(c)}`;
+    }
+    if(c.length === 4){ // M/D/YYYY (assume US style, Excel default)
+      const month = Number(a), day = Number(b);
+      if(month > 12) return `${c}-${pad(b)}-${pad(a)}`; // was actually D/M/YYYY
+      return `${c}-${pad(a)}-${pad(b)}`;
+    }
+  }
+
+  // Last resort: let JS Date try
+  const d = new Date(s);
+  if(!isNaN(d.getTime())) return d.toISOString().slice(0,10);
+
+  return s; // give up, return as-is
+}
+
 // ---------- Try auto-loading data.xlsx from the same folder ----------
 async function tryAutoLoad(){
   try{
@@ -283,7 +324,7 @@ async function tryAutoLoad(){
     const sheet = wb.Sheets[wb.SheetNames[0]];
     const json = XLSX.utils.sheet_to_json(sheet, {raw:false});
     rawData = json.map(r=>({
-      Date: (r.Date||r.date||"").toString().slice(0,10),
+      Date: normalizeDate(r.Date||r.date),
       Department: r.Department||r.department||"Unknown",
       "Staff Name": r["Staff Name"]||r.Name||r.name||"",
       Status: r.Status||r.status||""
@@ -310,7 +351,7 @@ document.getElementById('fileInput').addEventListener('change', function(e){
     const sheet = wb.Sheets[wb.SheetNames[0]];
     const json = XLSX.utils.sheet_to_json(sheet, {raw:false});
     rawData = json.map(r=>({
-      Date: (r.Date||r.date||"").toString().slice(0,10),
+      Date: normalizeDate(r.Date||r.date),
       Department: r.Department||r.department||"Unknown",
       "Staff Name": r["Staff Name"]||r.Name||r.name||"",
       Status: r.Status||r.status||""
@@ -338,7 +379,9 @@ function initDateRange(){
   document.getElementById('dateTo').value = dates[dates.length-1];
 }
 document.getElementById('dateFrom').addEventListener('change', render);
+document.getElementById('dateFrom').addEventListener('input', render);
 document.getElementById('dateTo').addEventListener('change', render);
+document.getElementById('dateTo').addEventListener('input', render);
 
 // ---------- Rendering ----------
 function render(){
