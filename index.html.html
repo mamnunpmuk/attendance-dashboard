@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Daily Attendance Dashboard</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+  :root{
+    --ink:#222831;
+    --paper:#ffffff;
+    --panel:#ffffff;
+    --line:#e6e6e6;
+    --muted:#6b6f76;
+    --radius:6px;
+
+    --grey:#d9d9d9;
+    --green:#c6e8b4;
+    --green-text:#3a6b1e;
+    --pink:#f4b8ba;
+    --pink-text:#8c2f31;
+    --yellow:#f7e2a5;
+    --yellow-text:#7a5c00;
+    --magenta:#e06fb0;
+    --blue:#2e9bf0;
+
+    --purple-panel:#dcd6f7;
+    --red-panel:#e8a3a0;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:"Segoe UI", -apple-system, BlinkMacSystemFont, sans-serif;
+  }
+  .wrap{max-width:1200px;margin:0 auto;padding:20px 24px 60px;}
+
+  header{
+    display:flex;
+    justify-content:space-between;
+    align-items:stretch;
+    flex-wrap:wrap;
+    gap:16px;
+    margin-bottom:22px;
+  }
+  .title-card{
+    background:#fff;
+    border:1px solid #e8a3a0;
+    border-radius:4px;
+    box-shadow:0 2px 6px rgba(0,0,0,.06);
+    padding:18px 22px;
+    display:flex;
+    align-items:center;
+    min-width:280px;
+  }
+  h1{
+    font-size:22px;
+    margin:0;
+    font-weight:700;
+    letter-spacing:-0.01em;
+    color:#222;
+  }
+  .updated{font-size:11px;color:var(--muted);margin-top:4px;}
+
+  .filter-panels{
+    display:flex;
+    gap:14px;
+    flex-wrap:wrap;
+  }
+  .panel-box{
+    border-radius:4px;
+    padding:10px 16px 14px;
+  }
+  .panel-box .ptitle{
+    font-size:13px;
+    font-weight:700;
+    margin-bottom:8px;
+    color:#222;
+  }
+  .date-panel{
+    background:var(--purple-panel);
+    display:flex;
+    flex-direction:column;
+  }
+  .date-inputs{display:flex;gap:8px;}
+  .date-inputs input[type="date"]{
+    border:none;
+    border-radius:4px;
+    padding:7px 8px;
+    font-size:13px;
+    color:#222;
+  }
+  .dept-panel{
+    background:var(--red-panel);
+  }
+  .dept-panel select{
+    border:none;
+    border-radius:4px;
+    padding:8px 10px;
+    font-size:13px;
+    min-width:220px;
+    background:#fff;
+  }
+
+  .file-btn{
+    background:var(--ink);
+    color:#fff;
+    border:none;
+    padding:0 16px;
+    border-radius:4px;
+    font-size:13px;
+    font-weight:600;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+  }
+  .file-btn:hover{opacity:.85;}
+  #fileInput{display:none;}
+
+  .kpis{
+    display:grid;
+    grid-template-columns:repeat(6,1fr);
+    gap:14px;
+    margin-bottom:28px;
+  }
+  .kpi{
+    border-radius:4px;
+    padding:18px 16px;
+  }
+  .kpi .num{font-size:32px;font-weight:700;line-height:1;color:#222;}
+  .kpi .label{font-size:13px;color:#333;margin-top:8px;}
+  .kpi.total{background:var(--grey);}
+  .kpi.present{background:var(--green);}
+  .kpi.absent{background:var(--pink);}
+  .kpi.late{background:var(--yellow);}
+  .kpi.leave{background:var(--magenta);}
+  .kpi.leave .num, .kpi.leave .label{color:#fff;}
+  .kpi.rate{background:var(--blue);}
+  .kpi.rate .num, .kpi.rate .label{color:#fff;}
+
+  .charts{
+    display:grid;
+    grid-template-columns:1.3fr 1fr;
+    gap:16px;
+  }
+  .panel{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:18px;
+  }
+  .panel h2{
+    font-size:13px;
+    text-transform:uppercase;
+    letter-spacing:.06em;
+    color:var(--muted);
+    margin:0 0 14px;
+    font-weight:700;
+  }
+  canvas{max-height:320px;}
+
+  .empty-state{
+    text-align:center;
+    padding:60px 20px;
+    color:var(--muted);
+    background:var(--panel);
+    border:1px dashed var(--line);
+    border-radius:var(--radius);
+  }
+  .empty-state b{color:var(--ink);}
+
+  footer{
+    margin-top:28px;
+    font-size:12px;
+    color:var(--muted);
+    border-top:1px solid var(--line);
+    padding-top:14px;
+  }
+
+  @media (max-width:900px){
+    .kpis{grid-template-columns:repeat(3,1fr);}
+    .charts{grid-template-columns:1fr;}
+  }
+  @media (max-width:520px){
+    .kpis{grid-template-columns:repeat(2,1fr);}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="title-card">
+      <div>
+        <h1>Daily attendance dashboard</h1>
+        <div class="updated" id="updatedLine">Showing sample data — upload your file to replace it</div>
+      </div>
+    </div>
+
+    <div class="filter-panels">
+      <div class="panel-box date-panel">
+        <div class="ptitle">Date</div>
+        <div class="date-inputs">
+          <input type="date" id="dateFrom">
+          <input type="date" id="dateTo">
+        </div>
+      </div>
+
+      <div class="panel-box dept-panel">
+        <div class="ptitle">Department</div>
+        <select id="deptFilter"></select>
+      </div>
+
+      <label class="file-btn" for="fileInput" id="uploadLabel" style="display:none;">Upload Excel / CSV</label>
+      <input type="file" id="fileInput" accept=".xlsx,.xls,.csv">
+    </div>
+  </header>
+
+  <div id="dashboard">
+    <div class="kpis">
+      <div class="kpi total"><div class="num" id="kpiTotal">0</div><div class="label">Total Staff</div></div>
+      <div class="kpi present"><div class="num" id="kpiPresent">0</div><div class="label">Present</div></div>
+      <div class="kpi absent"><div class="num" id="kpiAbsent">0</div><div class="label">Absent</div></div>
+      <div class="kpi late"><div class="num" id="kpiLate">0</div><div class="label">Late Count</div></div>
+      <div class="kpi leave"><div class="num" id="kpiLeave">0</div><div class="label">On Leave</div></div>
+      <div class="kpi rate"><div class="num" id="kpiRate">0%</div><div class="label">Attendance Rate</div></div>
+    </div>
+
+    <div class="charts">
+      <div class="panel">
+        <h2>Absent & Present by Date</h2>
+        <canvas id="lineChart"></canvas>
+      </div>
+      <div class="panel">
+        <h2>On Leave, Present & Absent</h2>
+        <canvas id="pieChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    Expected columns: <b>Date, Department, Staff Name, Status</b> (Present / Absent / Late / On Leave).
+    Each row = one staff member's status for one date.
+  </footer>
+</div>
+
+<script>
+// ---------- Sample data (mirrors the Power BI dashboard) ----------
+function generateSample(){
+  const depts = ["Human Resource & Administration","Finance","Operations","IT"];
+  const statuses = ["Present","Present","Present","Present","Absent","Late","On Leave"];
+  const dates = ["2026-07-21","2026-07-22","2026-07-23"];
+  const rows = [];
+  let id=1;
+  dates.forEach(date=>{
+    depts.forEach(dept=>{
+      const count = dept==="Human Resource & Administration" ? 109 : 40;
+      for(let i=0;i<count;i++){
+        rows.push({
+          Date:date,
+          Department:dept,
+          "Staff Name":"Staff "+id++,
+          Status: statuses[Math.floor(Math.random()*statuses.length)]
+        });
+      }
+    });
+  });
+  return rows;
+}
+
+let rawData = generateSample();
+let lineChart, pieChart;
+
+// ---------- Try auto-loading data.xlsx from the same folder ----------
+async function tryAutoLoad(){
+  try{
+    const res = await fetch('data.xlsx', {cache:'no-store'});
+    if(!res.ok) throw new Error('not found');
+    const buf = await res.arrayBuffer();
+    const wb = XLSX.read(new Uint8Array(buf), {type:'array'});
+    const sheet = wb.Sheets[wb.SheetNames[0]];
+    const json = XLSX.utils.sheet_to_json(sheet, {raw:false});
+    rawData = json.map(r=>({
+      Date: (r.Date||r.date||"").toString().slice(0,10),
+      Department: r.Department||r.department||"Unknown",
+      "Staff Name": r["Staff Name"]||r.Name||r.name||"",
+      Status: r.Status||r.status||""
+    }));
+    document.getElementById('updatedLine').textContent =
+      "Loaded automatically from data.xlsx — " + rawData.length + " rows";
+  }catch(e){
+    document.getElementById('updatedLine').textContent =
+      "Showing sample data — upload your file, or add data.xlsx to this folder";
+  }
+  populateDeptFilter();
+  initDateRange();
+  render();
+}
+
+// ---------- Parsing uploaded files ----------
+document.getElementById('fileInput').addEventListener('change', function(e){
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = function(evt){
+    const data = new Uint8Array(evt.target.result);
+    const wb = XLSX.read(data, {type:'array'});
+    const sheet = wb.Sheets[wb.SheetNames[0]];
+    const json = XLSX.utils.sheet_to_json(sheet, {raw:false});
+    rawData = json.map(r=>({
+      Date: (r.Date||r.date||"").toString().slice(0,10),
+      Department: r.Department||r.department||"Unknown",
+      "Staff Name": r["Staff Name"]||r.Name||r.name||"",
+      Status: r.Status||r.status||""
+    }));
+    document.getElementById('updatedLine').textContent =
+      "Loaded from " + file.name + " — " + rawData.length + " rows";
+    populateDeptFilter();
+    initDateRange();
+    render();
+  };
+  reader.readAsArrayBuffer(file);
+});
+
+function populateDeptFilter(){
+  const sel = document.getElementById('deptFilter');
+  const depts = ["All Departments", ...new Set(rawData.map(r=>r.Department))];
+  sel.innerHTML = depts.map(d=>`<option value="${d}">${d}</option>`).join('');
+}
+document.getElementById('deptFilter').addEventListener('change', render);
+
+function initDateRange(){
+  const dates = [...new Set(rawData.map(r=>r.Date))].filter(Boolean).sort();
+  if(!dates.length) return;
+  document.getElementById('dateFrom').value = dates[0];
+  document.getElementById('dateTo').value = dates[dates.length-1];
+}
+document.getElementById('dateFrom').addEventListener('change', render);
+document.getElementById('dateTo').addEventListener('change', render);
+
+// ---------- Rendering ----------
+function render(){
+  const dept = document.getElementById('deptFilter').value || "All Departments";
+  const from = document.getElementById('dateFrom').value;
+  const to = document.getElementById('dateTo').value;
+
+  let rows = rawData;
+  if(dept !== "All Departments"){
+    rows = rows.filter(r=>r.Department===dept);
+  }
+  if(from) rows = rows.filter(r=>r.Date >= from);
+  if(to) rows = rows.filter(r=>r.Date <= to);
+
+  const latestDate = [...new Set(rows.map(r=>r.Date))].sort().pop();
+  const todayRows = rows.filter(r=>r.Date===latestDate);
+
+  const total = todayRows.length;
+  const present = todayRows.filter(r=>r.Status==="Present").length;
+  const absent = todayRows.filter(r=>r.Status==="Absent").length;
+  const late = todayRows.filter(r=>r.Status==="Late").length;
+  const leave = todayRows.filter(r=>r.Status==="On Leave").length;
+  const rate = total ? ((present/total)*100).toFixed(2) : "0.00";
+
+  document.getElementById('kpiTotal').textContent = total;
+  document.getElementById('kpiPresent').textContent = present;
+  document.getElementById('kpiAbsent').textContent = absent;
+  document.getElementById('kpiLate').textContent = late;
+  document.getElementById('kpiLeave').textContent = leave;
+  document.getElementById('kpiRate').textContent = rate + "%";
+
+  // Line chart: absent/present by date
+  const dates = [...new Set(rows.map(r=>r.Date))].sort();
+  const presentByDate = dates.map(d=>rows.filter(r=>r.Date===d && r.Status==="Present").length);
+  const absentByDate = dates.map(d=>rows.filter(r=>r.Date===d && r.Status==="Absent").length);
+
+  if(lineChart) lineChart.destroy();
+  lineChart = new Chart(document.getElementById('lineChart'), {
+    type:'line',
+    data:{
+      labels:dates,
+      datasets:[
+        {label:'Present', data:presentByDate, borderColor:'#1a237e', backgroundColor:'#1a237e', tension:0.25},
+        {label:'Absent', data:absentByDate, borderColor:'#2e9bf0', backgroundColor:'#2e9bf0', tension:0.25}
+      ]
+    },
+    options:{responsive:true, plugins:{legend:{position:'top'}}, scales:{y:{beginAtZero:true}}}
+  });
+
+  // Pie chart: today's breakdown
+  if(pieChart) pieChart.destroy();
+  pieChart = new Chart(document.getElementById('pieChart'), {
+    type:'pie',
+    data:{
+      labels:['On Leave','Present','Absent'],
+      datasets:[{
+        data:[leave, present, absent],
+        backgroundColor:['#2e9bf0','#1a237e','#e67e3f']
+      }]
+    },
+    options:{responsive:true, plugins:{legend:{position:'right'}}}
+  });
+}
+
+// ---------- Show upload button only in edit mode ----------
+if(new URLSearchParams(window.location.search).get('edit') === '1'){
+  document.getElementById('uploadLabel').style.display = 'flex';
+}
+
+tryAutoLoad();
+</script>
+</body>
+</html>
