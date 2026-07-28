@@ -279,6 +279,11 @@ function pad(n){ return n.toString().padStart(2,'0'); }
 function normalizeDate(val){
   if(val === null || val === undefined || val === "") return "";
 
+  // Native JS Date object (from cellDates:true)
+  if(val instanceof Date && !isNaN(val.getTime())){
+    return `${val.getFullYear()}-${pad(val.getMonth()+1)}-${pad(val.getDate())}`;
+  }
+
   // Excel serial date number (e.g. 46226)
   if(typeof val === 'number' || /^\d{4,6}(\.\d+)?$/.test(val)){
     const num = Number(val);
@@ -320,9 +325,9 @@ async function tryAutoLoad(){
     const res = await fetch('data.xlsx', {cache:'no-store'});
     if(!res.ok) throw new Error('not found');
     const buf = await res.arrayBuffer();
-    const wb = XLSX.read(new Uint8Array(buf), {type:'array'});
+    const wb = XLSX.read(new Uint8Array(buf), {type:'array', cellDates:true});
     const sheet = wb.Sheets[wb.SheetNames[0]];
-    const json = XLSX.utils.sheet_to_json(sheet, {raw:false});
+    const json = XLSX.utils.sheet_to_json(sheet, {raw:true});
     rawData = json.map(r=>({
       Date: normalizeDate(r.Date||r.date),
       Department: r.Department||r.department||"Unknown",
@@ -347,9 +352,9 @@ document.getElementById('fileInput').addEventListener('change', function(e){
   const reader = new FileReader();
   reader.onload = function(evt){
     const data = new Uint8Array(evt.target.result);
-    const wb = XLSX.read(data, {type:'array'});
+    const wb = XLSX.read(data, {type:'array', cellDates:true});
     const sheet = wb.Sheets[wb.SheetNames[0]];
-    const json = XLSX.utils.sheet_to_json(sheet, {raw:false});
+    const json = XLSX.utils.sheet_to_json(sheet, {raw:true});
     rawData = json.map(r=>({
       Date: normalizeDate(r.Date||r.date),
       Department: r.Department||r.department||"Unknown",
