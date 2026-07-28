@@ -319,6 +319,10 @@ function normalizeDate(val){
   return s; // give up, return as-is
 }
 
+function normalizeText(val){
+  return (val||"").toString().replace(/\s+/g,' ').trim();
+}
+
 // ---------- Try auto-loading data.xlsx from the same folder ----------
 async function tryAutoLoad(){
   try{
@@ -330,9 +334,9 @@ async function tryAutoLoad(){
     const json = XLSX.utils.sheet_to_json(sheet, {raw:true});
     rawData = json.map(r=>({
       Date: normalizeDate(r.Date||r.date),
-      Department: r.Department||r.department||"Unknown",
+      Department: normalizeText(r.Department||r.department||"Unknown"),
       "Staff Name": r["Staff Name"]||r.Name||r.name||"",
-      Status: r.Status||r.status||""
+      Status: normalizeText(r.Status||r.status||"")
     }));
     document.getElementById('updatedLine').textContent =
       "Loaded automatically from data.xlsx — " + rawData.length + " rows";
@@ -357,9 +361,9 @@ document.getElementById('fileInput').addEventListener('change', function(e){
     const json = XLSX.utils.sheet_to_json(sheet, {raw:true});
     rawData = json.map(r=>({
       Date: normalizeDate(r.Date||r.date),
-      Department: r.Department||r.department||"Unknown",
+      Department: normalizeText(r.Department||r.department||"Unknown"),
       "Staff Name": r["Staff Name"]||r.Name||r.name||"",
-      Status: r.Status||r.status||""
+      Status: normalizeText(r.Status||r.status||"")
     }));
     document.getElementById('updatedLine').textContent =
       "Loaded from " + file.name + " — " + rawData.length + " rows";
@@ -373,7 +377,13 @@ document.getElementById('fileInput').addEventListener('change', function(e){
 function populateDeptFilter(){
   const sel = document.getElementById('deptFilter');
   const depts = ["All Departments", ...new Set(rawData.map(r=>r.Department))];
-  sel.innerHTML = depts.map(d=>`<option value="${d}">${d}</option>`).join('');
+  sel.innerHTML = "";
+  depts.forEach(d=>{
+    const opt = document.createElement('option');
+    opt.value = d;
+    opt.textContent = d;
+    sel.appendChild(opt);
+  });
 }
 document.getElementById('deptFilter').addEventListener('change', render);
 
@@ -391,7 +401,7 @@ document.getElementById('dateTo').addEventListener('input', render);
 
 // ---------- Rendering ----------
 function render(){
-  const dept = document.getElementById('deptFilter').value || "All Departments";
+  const dept = normalizeText(document.getElementById('deptFilter').value) || "All Departments";
   const from = document.getElementById('dateFrom').value;
   const to = document.getElementById('dateTo').value;
 
