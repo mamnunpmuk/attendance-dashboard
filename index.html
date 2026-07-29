@@ -96,7 +96,9 @@
         const response = await fetch(url, { cache:'no-store', headers:{'Cache-Control':'no-cache'} });
         if (!response.ok) throw new Error(`data.xlsx could not be loaded (HTTP ${response.status}).`);
         if (!window.XLSX) throw new Error('The Excel reader did not load. Check your internet connection and refresh.');
-        const workbook = XLSX.read(await response.arrayBuffer(), { type:'array', cellDates:true });
+        // Keep Excel dates as their numeric serials. Creating JavaScript Date objects here can
+        // shift a date by one day in some browser time zones (e.g. 23 July becoming 22 July).
+        const workbook = XLSX.read(await response.arrayBuffer(), { type:'array', cellDates:false });
         if (!workbook.SheetNames.length) throw new Error('The workbook has no sheets.');
         // Uses the first worksheet, as GitHub Pages can only read the file—not choose sheets interactively.
         const source = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], { defval:'', raw:true });
