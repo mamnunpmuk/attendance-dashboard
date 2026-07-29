@@ -388,11 +388,10 @@ function populateDeptFilter(){
 document.getElementById('deptFilter').addEventListener('change', render);
 
 function initDateRange(){
-  const dates = [...new Set(rawData.map(r=>r.Date))].filter(Boolean).sort();
-  if(!dates.length) return;
-  const latest = dates[dates.length-1];
-  document.getElementById('dateFrom').value = latest;
-  document.getElementById('dateTo').value = latest;
+  const now = new Date();
+  const today = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}`;
+  document.getElementById('dateFrom').value = today;
+  document.getElementById('dateTo').value = today;
 }
 document.getElementById('dateFrom').addEventListener('change', render);
 document.getElementById('dateFrom').addEventListener('input', render);
