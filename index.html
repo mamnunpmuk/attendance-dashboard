@@ -1,488 +1,123 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Daily Attendance Dashboard</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
-<style>
-  :root{
-    --ink:#222831;
-    --paper:#ffffff;
-    --panel:#ffffff;
-    --line:#e6e6e6;
-    --muted:#6b6f76;
-    --radius:6px;
-
-    --grey:#d9d9d9;
-    --green:#c6e8b4;
-    --green-text:#3a6b1e;
-    --pink:#f4b8ba;
-    --pink-text:#8c2f31;
-    --yellow:#f7e2a5;
-    --yellow-text:#7a5c00;
-    --magenta:#e06fb0;
-    --blue:#2e9bf0;
-
-    --purple-panel:#dcd6f7;
-    --red-panel:#e8a3a0;
-  }
-  *{box-sizing:border-box;}
-  body{
-    margin:0;
-    background:var(--paper);
-    color:var(--ink);
-    font-family:"Segoe UI", -apple-system, BlinkMacSystemFont, sans-serif;
-  }
-  .wrap{max-width:1200px;margin:0 auto;padding:20px 24px 60px;}
-
-  header{
-    display:flex;
-    justify-content:space-between;
-    align-items:stretch;
-    flex-wrap:wrap;
-    gap:16px;
-    margin-bottom:22px;
-  }
-  .title-card{
-    background:#fff;
-    border:1px solid #e8a3a0;
-    border-radius:4px;
-    box-shadow:0 2px 6px rgba(0,0,0,.06);
-    padding:18px 22px;
-    display:flex;
-    align-items:center;
-    min-width:280px;
-  }
-  h1{
-    font-size:22px;
-    margin:0;
-    font-weight:700;
-    letter-spacing:-0.01em;
-    color:#222;
-  }
-  .updated{font-size:11px;color:var(--muted);margin-top:4px;}
-
-  .filter-panels{
-    display:flex;
-    gap:14px;
-    flex-wrap:wrap;
-  }
-  .panel-box{
-    border-radius:4px;
-    padding:10px 16px 14px;
-  }
-  .panel-box .ptitle{
-    font-size:13px;
-    font-weight:700;
-    margin-bottom:8px;
-    color:#222;
-  }
-  .date-panel{
-    background:var(--purple-panel);
-    display:flex;
-    flex-direction:column;
-  }
-  .date-inputs{display:flex;gap:8px;}
-  .date-inputs input[type="date"]{
-    border:none;
-    border-radius:4px;
-    padding:7px 8px;
-    font-size:13px;
-    color:#222;
-  }
-  .dept-panel{
-    background:var(--red-panel);
-  }
-  .dept-panel select{
-    border:none;
-    border-radius:4px;
-    padding:8px 10px;
-    font-size:13px;
-    min-width:220px;
-    background:#fff;
-  }
-
-  .file-btn{
-    background:var(--ink);
-    color:#fff;
-    border:none;
-    padding:0 16px;
-    border-radius:4px;
-    font-size:13px;
-    font-weight:600;
-    cursor:pointer;
-    display:flex;
-    align-items:center;
-  }
-  .file-btn:hover{opacity:.85;}
-  #fileInput{display:none;}
-
-  .kpis{
-    display:grid;
-    grid-template-columns:repeat(6,1fr);
-    gap:14px;
-    margin-bottom:28px;
-  }
-  .kpi{
-    border-radius:4px;
-    padding:18px 16px;
-  }
-  .kpi .num{font-size:32px;font-weight:700;line-height:1;color:#222;}
-  .kpi .label{font-size:13px;color:#333;margin-top:8px;}
-  .kpi.total{background:var(--grey);}
-  .kpi.present{background:var(--green);}
-  .kpi.absent{background:var(--pink);}
-  .kpi.late{background:var(--yellow);}
-  .kpi.leave{background:var(--magenta);}
-  .kpi.leave .num, .kpi.leave .label{color:#fff;}
-  .kpi.rate{background:var(--blue);}
-  .kpi.rate .num, .kpi.rate .label{color:#fff;}
-
-  .charts{
-    display:grid;
-    grid-template-columns:1.3fr 1fr;
-    gap:16px;
-  }
-  .panel{
-    background:var(--panel);
-    border:1px solid var(--line);
-    border-radius:var(--radius);
-    padding:18px;
-  }
-  .panel h2{
-    font-size:13px;
-    text-transform:uppercase;
-    letter-spacing:.06em;
-    color:var(--muted);
-    margin:0 0 14px;
-    font-weight:700;
-  }
-  canvas{max-height:320px;}
-
-  .empty-state{
-    text-align:center;
-    padding:60px 20px;
-    color:var(--muted);
-    background:var(--panel);
-    border:1px dashed var(--line);
-    border-radius:var(--radius);
-  }
-  .empty-state b{color:var(--ink);}
-
-  footer{
-    margin-top:28px;
-    font-size:12px;
-    color:var(--muted);
-    border-top:1px solid var(--line);
-    padding-top:14px;
-  }
-
-  @media (max-width:900px){
-    .kpis{grid-template-columns:repeat(3,1fr);}
-    .charts{grid-template-columns:1fr;}
-  }
-  @media (max-width:520px){
-    .kpis{grid-template-columns:repeat(2,1fr);}
-  }
-</style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="Attendance dashboard">
+  <title>Attendance Dashboard</title>
+  <!-- SheetJS reads the Excel workbook in the browser. Keep this line if you replace this file. -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <style>
+    :root { --navy:#112a46; --blue:#1769aa; --green:#198754; --orange:#d97706; --red:#c0392b; --paper:#f4f7fb; --line:#dce4ef; --ink:#172033; --muted:#64748b; }
+    * { box-sizing:border-box; }
+    body { margin:0; color:var(--ink); background:var(--paper); font-family:Segoe UI,Roboto,Arial,sans-serif; }
+    header { padding:26px max(18px,calc((100% - 1180px)/2)); background:linear-gradient(125deg,var(--navy),#1f5b89); color:#fff; }
+    h1 { margin:0; font-size:clamp(1.5rem,3vw,2.1rem); } .sub { margin:7px 0 0; opacity:.85; }
+    main { max-width:1180px; margin:0 auto; padding:22px 18px 42px; }
+    .panel,.card { background:#fff; border:1px solid var(--line); border-radius:14px; box-shadow:0 2px 10px #152b4810; }
+    .filters { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)) auto; gap:14px; padding:17px; align-items:end; }
+    label { display:block; color:var(--muted); font-size:.82rem; font-weight:650; margin-bottom:6px; }
+    input,select,button { font:inherit; border-radius:8px; min-height:40px; }
+    input,select { width:100%; border:1px solid #bdc9d8; padding:8px 10px; color:var(--ink); background:#fff; }
+    button { border:0; padding:8px 16px; background:var(--blue); color:#fff; cursor:pointer; font-weight:650; } button:hover { filter:brightness(.92); }
+    #reload { background:#e9f2fa; color:#145282; } .status { min-height:23px; margin:13px 2px 0; color:var(--muted); font-size:.9rem; } .status.error { color:var(--red); font-weight:600; }
+    .kpis { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin:19px 0; }
+    .card { padding:17px; border-top:4px solid var(--blue); } .card.present { border-color:var(--green); } .card.absent { border-color:var(--red); } .card.rate { border-color:var(--orange); }
+    .card p { margin:0; color:var(--muted); font-size:.86rem; } .card strong { display:block; margin-top:6px; font-size:1.75rem; }
+    .grid { display:grid; grid-template-columns:1.1fr .9fr; gap:18px; margin-bottom:18px; } .chart { padding:18px; } h2 { margin:0 0 15px; font-size:1.05rem; }
+    .bars { min-height:180px; display:flex; gap:10px; align-items:flex-end; border-bottom:1px solid var(--line); padding:0 5px 25px; overflow-x:auto; }
+    .bar-item { min-width:44px; flex:1; max-width:80px; text-align:center; color:var(--muted); font-size:.72rem; } .bar { min-height:2px; background:linear-gradient(#4f9bd4,var(--blue)); border-radius:5px 5px 0 0; margin-bottom:6px; } .bar-value { color:var(--ink); font-weight:700; font-size:.75rem; }
+    .legend { display:grid; grid-template-columns:1fr auto; gap:9px 12px; font-size:.9rem; } .dot { display:inline-block; width:10px; height:10px; border-radius:50%; margin-right:7px; }
+    .table-panel { overflow:hidden; } .table-title { padding:18px 18px 10px; display:flex; justify-content:space-between; gap:12px; align-items:baseline; } .table-wrap { overflow:auto; max-height:500px; }
+    table { width:100%; border-collapse:collapse; font-size:.92rem; } th,td { padding:12px 18px; border-top:1px solid var(--line); text-align:left; white-space:nowrap; } th { position:sticky; top:0; background:#f8fafc; color:var(--muted); font-size:.78rem; text-transform:uppercase; letter-spacing:.03em; } tr:hover td { background:#fafcff; }
+    .pill { display:inline-block; border-radius:20px; padding:3px 9px; font-size:.78rem; font-weight:700; background:#edf2f7; } .pill.present { color:#12603d; background:#e0f4e9; } .pill.absent { color:#9b2920; background:#fbe7e5; }
+    .empty { padding:35px 18px; color:var(--muted); text-align:center; }
+    @media(max-width:760px) { .filters { grid-template-columns:1fr 1fr; } .filters button { grid-column:span 2; } .kpis { grid-template-columns:1fr 1fr; } .grid { grid-template-columns:1fr; } }
+  </style>
 </head>
 <body>
-<div class="wrap">
+  <header><h1>Attendance Dashboard</h1><p class="sub">Live attendance data from the latest Excel workbook</p></header>
+  <main>
+    <section class="panel filters">
+      <div><label for="dateFrom">From date</label><input id="dateFrom" type="date"></div>
+      <div><label for="dateTo">To date</label><input id="dateTo" type="date"></div>
+      <div><label for="department">Department</label><select id="department"><option value="">All departments</option></select></div>
+      <div><label for="search">Search staff</label><input id="search" type="search" placeholder="Name or status"></div>
+      <button id="reload" type="button">Reload data</button>
+    </section>
+    <p id="status" class="status" aria-live="polite">Loading workbook…</p>
+    <section class="kpis">
+      <div class="card"><p>Total records</p><strong id="total">0</strong></div>
+      <div class="card present"><p>Present</p><strong id="present">0</strong></div>
+      <div class="card absent"><p>Absent</p><strong id="absent">0</strong></div>
+      <div class="card rate"><p>Attendance rate</p><strong id="rate">—</strong></div>
+    </section>
+    <section class="grid">
+      <div class="panel chart"><h2>Attendance by date</h2><div id="bars" class="bars"></div></div>
+      <div class="panel chart"><h2>Status summary</h2><div id="legend" class="legend"></div></div>
+    </section>
+    <section class="panel table-panel">
+      <div class="table-title"><h2>Attendance records</h2><span id="count" class="sub"></span></div>
+      <div class="table-wrap"><table><thead><tr><th>Date</th><th>Staff name</th><th>Department</th><th>Status</th></tr></thead><tbody id="rows"></tbody></table></div>
+    </section>
+  </main>
+  <script>
+  (() => {
+    'use strict';
+    const $ = id => document.getElementById(id);
+    const state = { data: [] };
+    const fields = { date:['date','attendance date','date of attendance'], name:['staff name','name','employee name','employee'], department:['department','dept','division'], status:['status','attendance status'] };
+    const pad = n => String(n).padStart(2,'0');
+    const text = v => v == null ? '' : String(v).trim();
+    const key = v => text(v).toLowerCase().replace(/[._-]+/g,' ').replace(/\s+/g,' ');
 
-  <header>
-    <div class="title-card">
-      <div>
-        <h1>Daily attendance dashboard</h1>
-        <div class="updated" id="updatedLine">Showing sample data — upload your file to replace it</div>
-      </div>
-    </div>
-
-    <div class="filter-panels">
-      <div class="panel-box date-panel">
-        <div class="ptitle">Date</div>
-        <div class="date-inputs">
-          <input type="date" id="dateFrom">
-          <input type="date" id="dateTo">
-        </div>
-      </div>
-
-      <div class="panel-box dept-panel">
-        <div class="ptitle">Department</div>
-        <select id="deptFilter"></select>
-      </div>
-
-      <label class="file-btn" for="fileInput" id="uploadLabel" style="display:none;">Upload Excel / CSV</label>
-      <input type="file" id="fileInput" accept=".xlsx,.xls,.csv">
-    </div>
-  </header>
-
-  <div id="dashboard">
-    <div class="kpis">
-      <div class="kpi total"><div class="num" id="kpiTotal">0</div><div class="label">Total Staff</div></div>
-      <div class="kpi present"><div class="num" id="kpiPresent">0</div><div class="label">Present</div></div>
-      <div class="kpi absent"><div class="num" id="kpiAbsent">0</div><div class="label">Absent</div></div>
-      <div class="kpi late"><div class="num" id="kpiLate">0</div><div class="label">Late Count</div></div>
-      <div class="kpi leave"><div class="num" id="kpiLeave">0</div><div class="label">On Leave</div></div>
-      <div class="kpi rate"><div class="num" id="kpiRate">0%</div><div class="label">Attendance Rate</div></div>
-    </div>
-
-    <div class="charts">
-      <div class="panel">
-        <h2>Absent & Present by Date</h2>
-        <canvas id="lineChart"></canvas>
-      </div>
-      <div class="panel">
-        <h2>On Leave, Present & Absent</h2>
-        <canvas id="pieChart"></canvas>
-      </div>
-    </div>
-  </div>
-
-  <footer>
-    Expected columns: <b>Date, Department, Staff Name, Status</b> (Present / Absent / Late / On Leave).
-    Each row = one staff member's status for one date.
-  </footer>
-</div>
-
-<script>
-// ---------- Sample data (mirrors the Power BI dashboard) ----------
-function generateSample(){
-  const depts = ["Human Resource & Administration","Finance","Operations","IT"];
-  const statuses = ["Present","Present","Present","Present","Absent","Late","On Leave"];
-  const dates = ["2026-07-21","2026-07-22","2026-07-23"];
-  const rows = [];
-  let id=1;
-  dates.forEach(date=>{
-    depts.forEach(dept=>{
-      const count = dept==="Human Resource & Administration" ? 109 : 40;
-      for(let i=0;i<count;i++){
-        rows.push({
-          Date:date,
-          Department:dept,
-          "Staff Name":"Staff "+id++,
-          Status: statuses[Math.floor(Math.random()*statuses.length)]
-        });
-      }
-    });
-  });
-  return rows;
-}
-
-let rawData = generateSample();
-let lineChart, pieChart;
-
-// ---------- Robust date normalization (handles Excel serials & various formats) ----------
-function pad(n){ return n.toString().padStart(2,'0'); }
-
-function normalizeDate(val){
-  if(val === null || val === undefined || val === "") return "";
-
-  // Native JS Date object (from cellDates:true)
-  if(val instanceof Date && !isNaN(val.getTime())){
-    return `${val.getFullYear()}-${pad(val.getMonth()+1)}-${pad(val.getDate())}`;
-  }
-
-  // Excel serial date number (e.g. 46226)
-  if(typeof val === 'number' || /^\d{4,6}(\.\d+)?$/.test(val)){
-    const num = Number(val);
-    if(!isNaN(num) && num > 20000 && num < 90000){
-      const parsed = XLSX.SSF.parse_date_code(num);
-      if(parsed) return `${parsed.y}-${pad(parsed.m)}-${pad(parsed.d)}`;
+    // Converts an Excel date serial, a Date, DD-MM-YYYY, DD/MM/YYYY, YYYY-MM-DD, etc. to YYYY-MM-DD.
+    // Local date parts are used so browser time zones cannot move a date back one day.
+    function normalDate(value) {
+      if (value == null || value === '') return '';
+      if (value instanceof Date && !Number.isNaN(value.getTime())) return `${value.getFullYear()}-${pad(value.getMonth()+1)}-${pad(value.getDate())}`;
+      if (typeof value === 'number' && value > 1000 && window.XLSX) { const p = XLSX.SSF.parse_date_code(value); if (p) return `${p.y}-${pad(p.m)}-${pad(p.d)}`; }
+      const s = text(value); let m;
+      if ((m = s.match(/^(\d{4})[\/.\-](\d{1,2})[\/.\-](\d{1,2})/))) return `${m[1]}-${pad(m[2])}-${pad(m[3])}`;
+      if ((m = s.match(/^(\d{1,2})[\/.\-](\d{1,2})[\/.\-](\d{4})/))) return `${m[3]}-${pad(m[2])}-${pad(m[1])}`;
+      const d = new Date(s); return Number.isNaN(d.getTime()) ? '' : `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
     }
-  }
+    function displayDate(iso) { if (!iso) return '—'; const [y,m,d] = iso.split('-'); return `${d}-${m}-${y}`; }
+    function matchedValue(row, aliases) { const column = Object.keys(row).find(c => aliases.includes(key(c))); return column === undefined ? '' : row[column]; }
+    function statusClass(s) { return key(s).includes('present') ? 'present' : key(s).includes('absent') ? 'absent' : ''; }
+    function isPresent(s) { return /present|late|leave/.test(key(s)); }
+    function setStatus(message, error=false) { const el=$('status'); el.textContent=message; el.className='status'+(error?' error':''); }
 
-  const s = val.toString().trim();
-
-  // Already ISO: 2026-07-28
-  if(/^\d{4}-\d{2}-\d{2}/.test(s)) return s.slice(0,10);
-
-  // Slash formats: 7/28/2026 or 28/7/2026 or 2026/7/28
-  const parts = s.split(/[\/\-]/);
-  if(parts.length === 3){
-    let [a,b,c] = parts;
-    if(a.length === 4){ // YYYY/M/D
-      return `${a}-${pad(b)}-${pad(c)}`;
+    async function loadWorkbook() {
+      setStatus('Loading the latest workbook…');
+      try {
+        // Same-origin GitHub Pages path. The unique query and no-store prevent stale Excel responses.
+        const url = new URL('data.xlsx', window.location.href); url.searchParams.set('v', Date.now());
+        const response = await fetch(url, { cache:'no-store', headers:{'Cache-Control':'no-cache'} });
+        if (!response.ok) throw new Error(`data.xlsx could not be loaded (HTTP ${response.status}).`);
+        if (!window.XLSX) throw new Error('The Excel reader did not load. Check your internet connection and refresh.');
+        const workbook = XLSX.read(await response.arrayBuffer(), { type:'array', cellDates:true });
+        if (!workbook.SheetNames.length) throw new Error('The workbook has no sheets.');
+        // Uses the first worksheet, as GitHub Pages can only read the file—not choose sheets interactively.
+        const source = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], { defval:'', raw:true });
+        state.data = source.map(row => ({ date:normalDate(matchedValue(row,fields.date)), name:text(matchedValue(row,fields.name)), department:text(matchedValue(row,fields.department)), status:text(matchedValue(row,fields.status)) })).filter(r => r.date || r.name || r.department || r.status);
+        if (!state.data.length) throw new Error('No rows were found in the first worksheet.');
+        if (!state.data.some(r => r.date)) throw new Error('No date column was found. Use a header named Date or Attendance Date.');
+        fillDepartments(); initialiseDates(); render();
+        const dates = [...new Set(state.data.map(r=>r.date).filter(Boolean))].sort();
+        setStatus(`Loaded ${state.data.length} records. Latest available date: ${displayDate(dates.at(-1))}.`);
+      } catch (error) { state.data=[]; render(); setStatus(error.message+' Make sure data.xlsx is beside index.html and is committed to the same GitHub Pages branch.', true); console.error(error); }
     }
-    if(c.length === 4){ // M/D/YYYY (assume US style, Excel default)
-      const month = Number(a), day = Number(b);
-      if(month > 12) return `${c}-${pad(b)}-${pad(a)}`; // was actually D/M/YYYY
-      return `${c}-${pad(a)}-${pad(b)}`;
-    }
-  }
-
-  // Last resort: let JS Date try
-  const d = new Date(s);
-  if(!isNaN(d.getTime())) return d.toISOString().slice(0,10);
-
-  return s; // give up, return as-is
-}
-
-function normalizeText(val){
-  return (val||"").toString().replace(/\s+/g,' ').trim();
-}
-
-// ---------- Try auto-loading data.xlsx from the same folder ----------
-async function tryAutoLoad(){
-  // Primary: GitHub raw content (fresher, respects cache-busting reliably)
-  // Fallback: relative path (works for local testing / other hosts)
-  const candidates = [
-    'https://raw.githubusercontent.com/mamnunpmuk/attendance-dashboard/main/data.xlsx?v=' + Date.now(),
-    'https://raw.githubusercontent.com/mamnunpmuk/attendance-dashboard/master/data.xlsx?v=' + Date.now(),
-    'data.xlsx?v=' + Date.now()
-  ];
-
-  let loaded = false;
-  for(const url of candidates){
-    try{
-      const res = await fetch(url, {cache:'no-store'});
-      if(!res.ok) continue;
-      const buf = await res.arrayBuffer();
-      const wb = XLSX.read(new Uint8Array(buf), {type:'array', cellDates:true});
-      const sheet = wb.Sheets[wb.SheetNames[0]];
-      const json = XLSX.utils.sheet_to_json(sheet, {raw:true});
-      rawData = json.map(r=>({
-        Date: normalizeDate(r.Date||r.date),
-        Department: normalizeText(r.Department||r.department||"Unknown"),
-        "Staff Name": r["Staff Name"]||r.Name||r.name||"",
-        Status: normalizeText(r.Status||r.status||"")
-      }));
-      document.getElementById('updatedLine').textContent =
-        "Loaded automatically from data.xlsx — " + rawData.length + " rows";
-      loaded = true;
-      break;
-    }catch(e){
-      continue;
-    }
-  }
-  if(!loaded){
-    document.getElementById('updatedLine').textContent =
-      "Showing sample data — upload your file, or add data.xlsx to this folder";
-  }
-  populateDeptFilter();
-  initDateRange();
-  render();
-}
-
-// ---------- Parsing uploaded files ----------
-document.getElementById('fileInput').addEventListener('change', function(e){
-  const file = e.target.files[0];
-  if(!file) return;
-  const reader = new FileReader();
-  reader.onload = function(evt){
-    const data = new Uint8Array(evt.target.result);
-    const wb = XLSX.read(data, {type:'array', cellDates:true});
-    const sheet = wb.Sheets[wb.SheetNames[0]];
-    const json = XLSX.utils.sheet_to_json(sheet, {raw:true});
-    rawData = json.map(r=>({
-      Date: normalizeDate(r.Date||r.date),
-      Department: normalizeText(r.Department||r.department||"Unknown"),
-      "Staff Name": r["Staff Name"]||r.Name||r.name||"",
-      Status: normalizeText(r.Status||r.status||"")
-    }));
-    document.getElementById('updatedLine').textContent =
-      "Loaded from " + file.name + " — " + rawData.length + " rows";
-    populateDeptFilter();
-    initDateRange();
-    render();
-  };
-  reader.readAsArrayBuffer(file);
-});
-
-function populateDeptFilter(){
-  const sel = document.getElementById('deptFilter');
-  const depts = ["All Departments", ...new Set(rawData.map(r=>r.Department))];
-  sel.innerHTML = "";
-  depts.forEach(d=>{
-    const opt = document.createElement('option');
-    opt.value = d;
-    opt.textContent = d;
-    sel.appendChild(opt);
-  });
-}
-document.getElementById('deptFilter').addEventListener('change', render);
-
-function initDateRange(){
-  const now = new Date();
-  const today = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}`;
-  document.getElementById('dateFrom').value = today;
-  document.getElementById('dateTo').value = today;
-}
-document.getElementById('dateFrom').addEventListener('change', render);
-document.getElementById('dateFrom').addEventListener('input', render);
-document.getElementById('dateTo').addEventListener('change', render);
-document.getElementById('dateTo').addEventListener('input', render);
-
-// ---------- Rendering ----------
-function render(){
-  const dept = normalizeText(document.getElementById('deptFilter').value) || "All Departments";
-  const from = document.getElementById('dateFrom').value;
-  const to = document.getElementById('dateTo').value;
-
-  let rows = rawData;
-  if(dept !== "All Departments"){
-    rows = rows.filter(r=>r.Department===dept);
-  }
-  if(from) rows = rows.filter(r=>r.Date >= from);
-  if(to) rows = rows.filter(r=>r.Date <= to);
-
-  const latestDate = [...new Set(rows.map(r=>r.Date))].sort().pop();
-  const todayRows = rows.filter(r=>r.Date===latestDate);
-
-  const total = todayRows.length;
-  const present = todayRows.filter(r=>r.Status==="Present").length;
-  const absent = todayRows.filter(r=>r.Status==="Absent").length;
-  const late = todayRows.filter(r=>r.Status==="Late").length;
-  const leave = todayRows.filter(r=>["On Leave","Leave","Leave Approval Pending"].includes(r.Status)).length;
-  const rate = total ? ((present/total)*100).toFixed(2) : "0.00";
-
-  document.getElementById('kpiTotal').textContent = total;
-  document.getElementById('kpiPresent').textContent = present;
-  document.getElementById('kpiAbsent').textContent = absent;
-  document.getElementById('kpiLate').textContent = late;
-  document.getElementById('kpiLeave').textContent = leave;
-  document.getElementById('kpiRate').textContent = rate + "%";
-
-  // Line chart: absent/present by date
-  const dates = [...new Set(rows.map(r=>r.Date))].sort();
-  const presentByDate = dates.map(d=>rows.filter(r=>r.Date===d && r.Status==="Present").length);
-  const absentByDate = dates.map(d=>rows.filter(r=>r.Date===d && r.Status==="Absent").length);
-
-  if(lineChart) lineChart.destroy();
-  lineChart = new Chart(document.getElementById('lineChart'), {
-    type:'line',
-    data:{
-      labels:dates,
-      datasets:[
-        {label:'Present', data:presentByDate, borderColor:'#1a237e', backgroundColor:'#1a237e', tension:0.25},
-        {label:'Absent', data:absentByDate, borderColor:'#2e9bf0', backgroundColor:'#2e9bf0', tension:0.25}
-      ]
-    },
-    options:{responsive:true, plugins:{legend:{position:'top'}}, scales:{y:{beginAtZero:true}}}
-  });
-
-  // Pie chart: today's breakdown
-  if(pieChart) pieChart.destroy();
-  pieChart = new Chart(document.getElementById('pieChart'), {
-    type:'pie',
-    data:{
-      labels:['On Leave','Present','Absent'],
-      datasets:[{
-        data:[leave, present, absent],
-        backgroundColor:['#2e9bf0','#1a237e','#e67e3f']
-      }]
-    },
-    options:{responsive:true, plugins:{legend:{position:'right'}}}
-  });
-}
-
-// ---------- Show upload button only in edit mode ----------
-if(new URLSearchParams(window.location.search).get('edit') === '1'){
-  document.getElementById('uploadLabel').style.display = 'flex';
-}
-
-tryAutoLoad();
-</script>
+    function fillDepartments() { const select=$('department'), keep=select.value; select.innerHTML='<option value="">All departments</option>'; [...new Set(state.data.map(r=>r.department).filter(Boolean))].sort((a,b)=>a.localeCompare(b)).forEach(d => select.add(new Option(d,d))); select.value=keep; }
+    function initialiseDates() { const dates=[...new Set(state.data.map(r=>r.date).filter(Boolean))].sort(); const latest=dates.at(-1)||''; $('dateFrom').value=latest; $('dateTo').value=latest; }
+    function filtered() { const from=$('dateFrom').value, to=$('dateTo').value, department=$('department').value, q=key($('search').value); return state.data.filter(r => (!from || r.date>=from) && (!to || r.date<=to) && (!department || r.department===department) && (!q || key(`${r.name} ${r.status} ${r.department}`).includes(q))).sort((a,b)=>b.date.localeCompare(a.date)||a.name.localeCompare(b.name)); }
+    function render() { const rows=filtered(), present=rows.filter(r=>isPresent(r.status)).length, absent=rows.filter(r=>statusClass(r.status)==='absent').length, recognised=present+absent; $('total').textContent=rows.length; $('present').textContent=present; $('absent').textContent=absent; $('rate').textContent=recognised ? `${Math.round(present/recognised*100)}%` : '—'; $('count').textContent=`${rows.length} record${rows.length===1?'':'s'}`; renderTable(rows); renderBars(rows); renderLegend(rows); }
+    function renderTable(data) { const target=$('rows'); if (!data.length) { target.innerHTML='<tr><td class="empty" colspan="4">No records match the selected filters.</td></tr>'; return; } target.innerHTML=data.map(r=>`<tr><td>${displayDate(r.date)}</td><td>${escapeHtml(r.name||'—')}</td><td>${escapeHtml(r.department||'—')}</td><td><span class="pill ${statusClass(r.status)}">${escapeHtml(r.status||'Unknown')}</span></td></tr>`).join(''); }
+    function renderBars(data) { const group={}; data.forEach(r=>{ if(r.date) group[r.date]=(group[r.date]||0)+1; }); const items=Object.entries(group).sort(([a],[b])=>a.localeCompare(b)); const max=Math.max(...items.map(x=>x[1]),1); $('bars').innerHTML=items.length ? items.map(([d,n])=>`<div class="bar-item"><div class="bar-value">${n}</div><div class="bar" style="height:${Math.max(5,n/max*130)}px"></div>${displayDate(d).slice(0,5)}</div>`).join('') : '<div class="empty">No dates to chart.</div>'; }
+    function renderLegend(data) { const counts={}; data.forEach(r=>{ const s=r.status||'Unknown'; counts[s]=(counts[s]||0)+1; }); const colors=['#198754','#c0392b','#1769aa','#d97706','#7c3aed']; const items=Object.entries(counts).sort((a,b)=>b[1]-a[1]); $('legend').innerHTML=items.length ? items.map(([s,n],i)=>`<span><i class="dot" style="background:${colors[i%colors.length]}"></i>${escapeHtml(s)}</span><strong>${n}</strong>`).join('') : '<span>No data</span><strong>0</strong>'; }
+    function escapeHtml(value) { return String(value).replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c])); }
+    ['dateFrom','dateTo','department','search'].forEach(id => $(id).addEventListener(id==='search'?'input':'change',render)); $('reload').addEventListener('click',loadWorkbook); loadWorkbook();
+  })();
+  </script>
 </body>
 </html>
