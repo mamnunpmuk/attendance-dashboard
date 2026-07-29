@@ -325,22 +325,37 @@ function normalizeText(val){
 
 // ---------- Try auto-loading data.xlsx from the same folder ----------
 async function tryAutoLoad(){
-  try{
-    const res = await fetch('data.xlsx?v=' + Date.now(), {cache:'no-store'});
-    if(!res.ok) throw new Error('not found');
-    const buf = await res.arrayBuffer();
-    const wb = XLSX.read(new Uint8Array(buf), {type:'array', cellDates:true});
-    const sheet = wb.Sheets[wb.SheetNames[0]];
-    const json = XLSX.utils.sheet_to_json(sheet, {raw:true});
-    rawData = json.map(r=>({
-      Date: normalizeDate(r.Date||r.date),
-      Department: normalizeText(r.Department||r.department||"Unknown"),
-      "Staff Name": r["Staff Name"]||r.Name||r.name||"",
-      Status: normalizeText(r.Status||r.status||"")
-    }));
-    document.getElementById('updatedLine').textContent =
-      "Loaded automatically from data.xlsx — " + rawData.length + " rows";
-  }catch(e){
+  // Primary: GitHub raw content (fresher, respects cache-busting reliably)
+  // Fallback: relative path (works for local testing / other hosts)
+  const candidates = [
+    'https://raw.githubusercontent.com/mamnunpmuk/attendance-dashboard/main/data.xlsx?v=' + Date.now(),
+    'data.xlsx?v=' + Date.now()
+  ];
+
+  let loaded = false;
+  for(const url of candidates){
+    try{
+      const res = await fetch(url, {cache:'no-store'});
+      if(!res.ok) continue;
+      const buf = await res.arrayBuffer();
+      const wb = XLSX.read(new Uint8Array(buf), {type:'array', cellDates:true});
+      const sheet = wb.Sheets[wb.SheetNames[0]];
+      const json = XLSX.utils.sheet_to_json(sheet, {raw:true});
+      rawData = json.map(r=>({
+        Date: normalizeDate(r.Date||r.date),
+        Department: normalizeText(r.Department||r.department||"Unknown"),
+        "Staff Name": r["Staff Name"]||r.Name||r.name||"",
+        Status: normalizeText(r.Status||r.status||"")
+      }));
+      document.getElementById('updatedLine').textContent =
+        "Loaded automatically from data.xlsx — " + rawData.length + " rows";
+      loaded = true;
+      break;
+    }catch(e){
+      continue;
+    }
+  }
+  if(!loaded){
     document.getElementById('updatedLine').textContent =
       "Showing sample data — upload your file, or add data.xlsx to this folder";
   }
