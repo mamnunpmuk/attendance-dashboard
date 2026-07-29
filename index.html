@@ -329,6 +329,7 @@ async function tryAutoLoad(){
   // Fallback: relative path (works for local testing / other hosts)
   const candidates = [
     'https://raw.githubusercontent.com/mamnunpmuk/attendance-dashboard/main/data.xlsx?v=' + Date.now(),
+    'https://raw.githubusercontent.com/mamnunpmuk/attendance-dashboard/master/data.xlsx?v=' + Date.now(),
     'data.xlsx?v=' + Date.now()
   ];
 
@@ -433,7 +434,7 @@ function render(){
   const present = todayRows.filter(r=>r.Status==="Present").length;
   const absent = todayRows.filter(r=>r.Status==="Absent").length;
   const late = todayRows.filter(r=>r.Status==="Late").length;
-  const leave = todayRows.filter(r=>r.Status==="On Leave").length;
+  const leave = todayRows.filter(r=>["On Leave","Leave","Leave Approval Pending"].includes(r.Status)).length;
   const rate = total ? ((present/total)*100).toFixed(2) : "0.00";
 
   document.getElementById('kpiTotal').textContent = total;
