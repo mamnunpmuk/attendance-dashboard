@@ -21,20 +21,21 @@
     input,select { width:100%; border:1px solid #bdc9d8; padding:8px 10px; color:var(--ink); background:#fff; }
     button { border:0; padding:8px 16px; background:var(--blue); color:#fff; cursor:pointer; font-weight:650; } button:hover { filter:brightness(.92); }
     #reload { background:#e9f2fa; color:#145282; } .status { min-height:23px; margin:13px 2px 0; color:var(--muted); font-size:.9rem; } .status.error { color:var(--red); font-weight:600; }
-    .kpis { display:grid; grid-template-columns:repeat(5,1fr); gap:14px; margin:19px 0; }
-    .card { padding:17px; border-top:4px solid var(--blue); background:linear-gradient(135deg,#fff,#edf6ff); } .card.present { border-color:var(--green); background:linear-gradient(135deg,#fff,#e4f8ed); } .card.absent { border-color:var(--red); background:linear-gradient(135deg,#fff,#ffebe8); } .card.leave { border-color:var(--purple); background:linear-gradient(135deg,#fff,#f0eaff); } .card.rate { border-color:var(--orange); background:linear-gradient(135deg,#fff,#fff3d9); }
-    button.card { min-height:0; width:100%; color:var(--ink); text-align:left; border:1px solid var(--line); border-top:4px solid var(--blue); } button.card.present { border-top-color:var(--green); } button.card.absent { border-top-color:var(--red); } button.card.leave { border-top-color:var(--purple); } button.card:hover, button.card.active { transform:translateY(-2px); box-shadow:0 7px 18px #1d4d7a22; outline:3px solid #bfdbfe; }
+    .kpis { display:grid; grid-template-columns:repeat(6,1fr); gap:14px; margin:19px 0; }
+    .card { padding:17px; border-top:4px solid var(--blue); background:linear-gradient(135deg,#fff,#edf6ff); } .card.present { border-color:var(--green); background:linear-gradient(135deg,#fff,#e4f8ed); } .card.absent { border-color:var(--red); background:linear-gradient(135deg,#fff,#ffebe8); } .card.late { border-color:var(--orange); background:linear-gradient(135deg,#fff,#fff3d9); } .card.leave { border-color:var(--purple); background:linear-gradient(135deg,#fff,#f0eaff); } .card.rate { border-color:#0ea5a5; background:linear-gradient(135deg,#fff,#def7f6); }
+    button.card { min-height:0; width:100%; color:var(--ink); text-align:left; border:1px solid var(--line); border-top:4px solid var(--blue); } button.card.present { border-top-color:var(--green); } button.card.absent { border-top-color:var(--red); } button.card.late { border-top-color:var(--orange); } button.card.leave { border-top-color:var(--purple); } button.card:hover, button.card.active { transform:translateY(-2px); box-shadow:0 7px 18px #1d4d7a22; outline:3px solid #bfdbfe; }
     .card p { margin:0; color:var(--muted); font-size:.86rem; } .card strong { display:block; margin-top:6px; font-size:1.75rem; }
-    .grid { display:grid; grid-template-columns:1.1fr .9fr; gap:18px; margin-bottom:18px; } .chart { padding:18px; } h2 { margin:0 0 15px; font-size:1.05rem; }
+    .grid { display:grid; grid-template-columns:1fr 1.35fr .9fr; gap:18px; margin-bottom:18px; } .chart { padding:18px; } h2 { margin:0 0 15px; font-size:1.05rem; }
     .bars { min-height:180px; display:flex; gap:10px; align-items:flex-end; border-bottom:1px solid var(--line); padding:0 5px 25px; overflow-x:auto; }
     .bar-item { min-width:44px; flex:1; max-width:80px; text-align:center; color:var(--muted); font-size:.72rem; } .bar { min-height:2px; background:linear-gradient(#4f9bd4,var(--blue)); border-radius:5px 5px 0 0; margin-bottom:6px; } .bar-value { color:var(--ink); font-weight:700; font-size:.75rem; }
     .legend { display:grid; grid-template-columns:1fr auto; gap:9px 12px; font-size:.9rem; } .dot { display:inline-block; width:10px; height:10px; border-radius:50%; margin-right:7px; }
+    .designation-summary { overflow:auto; max-height:245px; } .designation-summary table { font-size:.78rem; } .designation-summary th,.designation-summary td { padding:8px 7px; } .designation-summary th { position:static; } .designation-summary td:first-child { white-space:normal; min-width:140px; } .count-absent { color:var(--red); font-weight:800; } .count-late { color:#b45309; font-weight:800; } .count-leave { color:var(--purple); font-weight:800; }
     .table-panel { overflow:hidden; } .table-title { padding:18px 18px 10px; display:flex; justify-content:space-between; gap:12px; align-items:baseline; } .table-wrap { overflow:auto; max-height:500px; }
     table { width:100%; border-collapse:collapse; font-size:.92rem; } th,td { padding:12px 18px; border-top:1px solid var(--line); text-align:left; white-space:nowrap; } th { position:sticky; top:0; background:#f8fafc; color:var(--muted); font-size:.78rem; text-transform:uppercase; letter-spacing:.03em; } tr:hover td { background:#fafcff; }
     .pill { display:inline-block; border-radius:20px; padding:3px 9px; font-size:.78rem; font-weight:700; background:#edf2f7; } .pill.present { color:#12603d; background:#e0f4e9; } .pill.absent { color:#9b2920; background:#fbe7e5; }
     .empty { padding:35px 18px; color:var(--muted); text-align:center; }
     .attendance-message { margin:15px 0 0; padding:10px 14px; border-left:4px solid var(--blue); border-radius:8px; background:#eaf4fc; color:#164b76; font-weight:600; }
-    @media(max-width:900px) { .kpis { grid-template-columns:repeat(3,1fr); } } @media(max-width:760px) { .filters { grid-template-columns:1fr 1fr; } .filters button { grid-column:span 2; } .kpis { grid-template-columns:1fr 1fr; } .grid { grid-template-columns:1fr; } }
+    @media(max-width:1050px) { .kpis { grid-template-columns:repeat(3,1fr); } .grid { grid-template-columns:1fr 1fr; } .grid > :nth-child(2) { grid-column:span 2; } } @media(max-width:760px) { .filters { grid-template-columns:1fr 1fr; } .filters button { grid-column:span 2; } .kpis { grid-template-columns:1fr 1fr; } .grid { grid-template-columns:1fr; } .grid > :nth-child(2) { grid-column:auto; } }
   </style>
 </head>
 <body>
@@ -53,11 +54,13 @@
       <button class="card" id="allCard" data-category=""><p>Total staff</p><strong id="total">0</strong></button>
       <button class="card present" id="presentCard" data-category="present"><p>Present</p><strong id="present">0</strong></button>
       <button class="card absent" id="absentCard" data-category="absent"><p>Absent</p><strong id="absent">0</strong></button>
+      <button class="card late" id="lateCard" data-category="late"><p>Late</p><strong id="late">0</strong></button>
       <button class="card leave" id="leaveCard" data-category="leave"><p>On leave</p><strong id="leave">0</strong></button>
       <div class="card rate"><p>Attendance rate</p><strong id="rate">—</strong></div>
     </section>
     <section class="grid">
       <div class="panel chart"><h2>Attendance by date</h2><div id="bars" class="bars"></div></div>
+      <div class="panel chart"><h2>Designation wise summary</h2><div id="designationSummary" class="designation-summary"></div></div>
       <div class="panel chart"><h2>Status summary</h2><div id="legend" class="legend"></div></div>
     </section>
     <section class="panel table-panel">
@@ -70,7 +73,7 @@
     'use strict';
     const $ = id => document.getElementById(id);
     const state = { data: [], category: '' };
-    const fields = { date:['date','attendance date','date of attendance'], id:['employee id','employee code','staff id','id'], name:['staff name','name','employee name','employee'], department:['department','dept','division'], status:['status','attendance status'] };
+    const fields = { date:['date','attendance date','date of attendance'], id:['employee id','employee code','staff id','id'], name:['staff name','name','employee name','employee'], department:['department','dept','division'], designation:['designation','job title','position'], status:['status','attendance status'] };
     const pad = n => String(n).padStart(2,'0');
     const text = v => v == null ? '' : String(v).trim();
     const key = v => text(v).toLowerCase().replace(/[._-]+/g,' ').replace(/\s+/g,' ');
@@ -88,8 +91,9 @@
     }
     function displayDate(iso) { if (!iso) return '—'; const [y,m,d] = iso.split('-'); return `${d}-${m}-${y}`; }
     function matchedValue(row, aliases) { const column = Object.keys(row).find(c => aliases.includes(key(c))); return column === undefined ? '' : row[column]; }
-    function statusClass(s) { const v=key(s); return v.includes('absent') ? 'absent' : v.includes('leave') ? 'leave' : v.includes('present') ? 'present' : ''; }
-    function isPresent(s) { const v=key(s); return v.includes('present') || v.includes('late'); }
+    function statusClass(s) { const v=key(s); return v.includes('absent') ? 'absent' : v.includes('leave') ? 'leave' : v.includes('late') ? 'late' : v.includes('present') ? 'present' : ''; }
+    function isPresent(s) { return key(s).includes('present'); }
+    function isLate(s) { return key(s).includes('late'); }
     function isLeave(s) { return key(s).includes('leave'); }
     function setStatus(message, error=false) { const el=$('status'); el.textContent=message; el.className='status'+(error?' error':''); }
 
@@ -107,7 +111,7 @@
         if (!workbook.SheetNames.length) throw new Error('The workbook has no sheets.');
         // Uses the first worksheet, as GitHub Pages can only read the file—not choose sheets interactively.
         const source = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], { defval:'', raw:true });
-        state.data = source.map(row => ({ date:normalDate(matchedValue(row,fields.date)), id:text(matchedValue(row,fields.id)), name:text(matchedValue(row,fields.name)), department:text(matchedValue(row,fields.department)), status:text(matchedValue(row,fields.status)) })).filter(r => r.date || r.name || r.department || r.status);
+        state.data = source.map(row => ({ date:normalDate(matchedValue(row,fields.date)), id:text(matchedValue(row,fields.id)), name:text(matchedValue(row,fields.name)), department:text(matchedValue(row,fields.department)), designation:text(matchedValue(row,fields.designation)), status:text(matchedValue(row,fields.status)) })).filter(r => r.date || r.name || r.department || r.status);
         if (!state.data.length) throw new Error('No rows were found in the first worksheet.');
         if (!state.data.some(r => r.date)) throw new Error('No date column was found. Use a header named Date or Attendance Date.');
         fillDepartments(); initialiseDates(); render();
@@ -121,9 +125,10 @@
     function updateDateMessage() { const from=$('dateFrom').value, to=$('dateTo').value; $('attendanceMessage').textContent=from && from===to ? `This dashboard is showing attendance for ${displayDate(from)}.` : from && to ? `This dashboard is showing attendance from ${displayDate(from)} to ${displayDate(to)}.` : 'This dashboard is showing current attendance data.'; }
     function baseFiltered() { const from=$('dateFrom').value, to=$('dateTo').value, department=$('department').value, q=key($('search').value); return state.data.filter(r => (!from || r.date>=from) && (!to || r.date<=to) && (!department || r.department===department) && (!q || key(`${r.name} ${r.status} ${r.department}`).includes(q))); }
     function filtered() { return baseFiltered().filter(r => !state.category || statusClass(r.status)===state.category).sort((a,b)=>b.date.localeCompare(a.date)||a.name.localeCompare(b.name)); }
-    function render() { const base=baseFiltered(), rows=filtered(), present=base.filter(r=>isPresent(r.status)).length, absent=base.filter(r=>statusClass(r.status)==='absent').length, leave=base.filter(r=>isLeave(r.status)).length, recognised=present+absent, totalStaff=new Set(base.map(r=>r.id||r.name).filter(Boolean)).size; $('total').textContent=totalStaff; $('present').textContent=present; $('absent').textContent=absent; $('leave').textContent=leave; $('rate').textContent=recognised ? `${Math.round(present/recognised*100)}%` : '—'; $('count').textContent=`${rows.length} record${rows.length===1?'':'s'}${state.category ? ` — ${state.category}` : ''}`; updateDateMessage(); document.querySelectorAll('[data-category]').forEach(card=>card.classList.toggle('active',card.dataset.category===state.category)); renderTable(rows); renderBars(rows); renderLegend(rows); }
+    function render() { const base=baseFiltered(), rows=filtered(), present=base.filter(r=>isPresent(r.status)).length, absent=base.filter(r=>statusClass(r.status)==='absent').length, late=base.filter(r=>isLate(r.status)).length, leave=base.filter(r=>isLeave(r.status)).length, recognised=present+late+absent, totalStaff=new Set(base.map(r=>r.id||r.name).filter(Boolean)).size; $('total').textContent=totalStaff; $('present').textContent=present; $('absent').textContent=absent; $('late').textContent=late; $('leave').textContent=leave; $('rate').textContent=recognised ? `${Math.round((present+late)/recognised*100)}%` : '—'; $('count').textContent=`${rows.length} record${rows.length===1?'':'s'}${state.category ? ` — ${state.category}` : ''}`; updateDateMessage(); document.querySelectorAll('[data-category]').forEach(card=>card.classList.toggle('active',card.dataset.category===state.category)); renderTable(rows); renderBars(rows); renderDesignationSummary(base); renderLegend(rows); }
     function renderTable(data) { const target=$('rows'); if (!data.length) { target.innerHTML='<tr><td class="empty" colspan="4">No records match the selected filters.</td></tr>'; return; } target.innerHTML=data.map(r=>`<tr><td>${displayDate(r.date)}</td><td>${escapeHtml(r.name||'—')}</td><td>${escapeHtml(r.department||'—')}</td><td><span class="pill ${statusClass(r.status)}">${escapeHtml(r.status||'Unknown')}</span></td></tr>`).join(''); }
     function renderBars(data) { const group={}; data.forEach(r=>{ if(r.date) group[r.date]=(group[r.date]||0)+1; }); const items=Object.entries(group).sort(([a],[b])=>a.localeCompare(b)); const max=Math.max(...items.map(x=>x[1]),1); $('bars').innerHTML=items.length ? items.map(([d,n])=>`<div class="bar-item"><div class="bar-value">${n}</div><div class="bar" style="height:${Math.max(5,n/max*130)}px"></div>${displayDate(d).slice(0,5)}</div>`).join('') : '<div class="empty">No dates to chart.</div>'; }
+    function renderDesignationSummary(data) { const groups={}; data.forEach(r=>{ const name=r.designation||'Not specified'; if(!groups[name]) groups[name]={absent:0,late:0,leave:0}; const category=statusClass(r.status); if(category==='absent'||category==='late'||category==='leave') groups[name][category]++; }); const items=Object.entries(groups).sort((a,b)=>(b[1].absent+b[1].late+b[1].leave)-(a[1].absent+a[1].late+a[1].leave)||a[0].localeCompare(b[0])); $('designationSummary').innerHTML=items.length ? `<table><thead><tr><th>Designation</th><th>Absent</th><th>Late</th><th>Leave</th></tr></thead><tbody>${items.map(([name,n])=>`<tr><td>${escapeHtml(name)}</td><td class="count-absent">${n.absent}</td><td class="count-late">${n.late}</td><td class="count-leave">${n.leave}</td></tr>`).join('')}</tbody></table>` : '<div class="empty">No data to summarize.</div>'; }
     function renderLegend(data) { const counts={}; data.forEach(r=>{ const s=r.status||'Unknown'; counts[s]=(counts[s]||0)+1; }); const colors=['#198754','#c0392b','#1769aa','#d97706','#7c3aed']; const items=Object.entries(counts).sort((a,b)=>b[1]-a[1]); $('legend').innerHTML=items.length ? items.map(([s,n],i)=>`<span><i class="dot" style="background:${colors[i%colors.length]}"></i>${escapeHtml(s)}</span><strong>${n}</strong>`).join('') : '<span>No data</span><strong>0</strong>'; }
     function escapeHtml(value) { return String(value).replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c])); }
     ['dateFrom','dateTo','department','search'].forEach(id => $(id).addEventListener(id==='search'?'input':'change',render)); document.querySelectorAll('[data-category]').forEach(card=>card.addEventListener('click',()=>{ state.category=card.dataset.category; render(); document.querySelector('.table-panel').scrollIntoView({behavior:'smooth',block:'start'}); })); $('reload').addEventListener('click',loadWorkbook); loadWorkbook();
