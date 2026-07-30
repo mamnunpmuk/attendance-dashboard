@@ -93,12 +93,13 @@
     function displayDate(iso) { if (!iso) return '—'; const [y,m,d] = iso.split('-'); return `${d}-${m}-${y}`; }
     function matchedValue(row, aliases) { const column = Object.keys(row).find(c => aliases.includes(key(c))); return column === undefined ? '' : row[column]; }
     function entryMinutes(value) { if (value == null || value === '') return null; if (value instanceof Date) return value.getHours()*60+value.getMinutes(); if (typeof value === 'number') { const fraction=((value%1)+1)%1; return Math.round(fraction*1440); } const s=text(value); const match=s.match(/(\d{1,2}):(\d{2})(?:\s*([AaPp][Mm]))?/); if(!match) return null; let hour=Number(match[1]), minute=Number(match[2]); if(match[3]) { const ampm=match[3].toLowerCase(); if(hour===12) hour=0; if(ampm==='pm') hour+=12; } return hour*60+minute; }
+    function formatEntryTime(value) { const minutes=entryMinutes(value); if(minutes === null) return ''; const hour24=Math.floor(minutes/60)%24, minute=minutes%60, suffix=hour24>=12?'PM':'AM', hour12=hour24%12||12; return `${hour12}:${pad(minute)} ${suffix}`; }
     function attendanceCategory(row) { const v=key(row.status); if(v.includes('absent')) return 'absent'; if(v.includes('off day')||v.includes('offday')) return 'offday'; if(v.includes('leave')) return 'leave'; const minutes=entryMinutes(row.entryTime); if(minutes !== null && minutes > 10*60+5) return 'late'; if(v.includes('late')) return 'late'; if(v.includes('present')) return 'present'; return ''; }
     function statusClass(row) { return attendanceCategory(row); }
     function isPresent(row) { return attendanceCategory(row)==='present'; }
     function isLate(row) { return attendanceCategory(row)==='late'; }
     function isLeave(row) { return attendanceCategory(row)==='leave'; }
-    function displayStatus(row) { const category=attendanceCategory(row); if(category==='late' && !key(row.status).includes('late')) return 'Late (after 10:05 AM)'; return row.status||'Unknown'; }
+    function displayStatus(row) { const category=attendanceCategory(row); if(category==='late') { const entry=formatEntryTime(row.entryTime); return entry ? `Late (${entry})` : 'Late (after 10:05 AM)'; } return row.status||'Unknown'; }
     function setStatus(message, error=false) { const el=$('status'); el.textContent=message; el.className='status'+(error?' error':''); }
 
     async function loadWorkbook() {
