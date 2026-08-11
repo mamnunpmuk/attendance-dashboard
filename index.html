@@ -5,146 +5,2393 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="description" content="Attendance dashboard">
   <title>Attendance Dashboard</title>
-  <!-- SheetJS reads the Excel workbook in the browser. Keep this line if you replace this file. -->
+
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
   <style>
-    :root { --navy:#152b59; --blue:#1677d2; --green:#119c62; --orange:#f59e0b; --red:#e64a3c; --purple:#805ad5; --paper:#f3f7ff; --line:#dce4ef; --ink:#172033; --muted:#64748b; }
-    * { box-sizing:border-box; }
-    body { margin:0; color:var(--ink); background:var(--paper); font-family:Segoe UI,Roboto,Arial,sans-serif; }
-    header { padding:26px max(18px,calc((100% - 1180px)/2)); background:linear-gradient(120deg,#172e60 0%,#1769aa 52%,#16a5a0 100%); color:#fff; }
-    h1 { margin:0; font-size:clamp(1.5rem,3vw,2.1rem); } .sub { margin:7px 0 0; opacity:.85; }
-    main { max-width:1180px; margin:0 auto; padding:22px 18px 42px; }
-    .panel,.card { background:#fff; border:1px solid var(--line); border-radius:14px; box-shadow:0 2px 10px #152b4810; }
-    .filters { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)) auto auto; gap:14px; padding:17px; align-items:end; }
-    label { display:block; color:var(--muted); font-size:.82rem; font-weight:650; margin-bottom:6px; }
-    input,select,button { font:inherit; border-radius:8px; min-height:40px; }
-    input,select { width:100%; border:1px solid #bdc9d8; padding:8px 10px; color:var(--ink); background:#fff; }
-    button { border:0; padding:8px 16px; background:var(--blue); color:#fff; cursor:pointer; font-weight:650; } button:hover { filter:brightness(.92); }
-    #reload { background:#e9f2fa; color:#145282; } #reset { background:#64748b; } .status { min-height:23px; margin:13px 2px 0; color:var(--muted); font-size:.9rem; } .status.error { color:var(--red); font-weight:600; }
-    .kpis { display:grid; grid-template-columns:repeat(7,1fr); gap:14px; margin:19px 0; }
-    .card { padding:17px; border-top:4px solid var(--blue); background:linear-gradient(135deg,#fff,#edf6ff); } .card.present { border-color:var(--green); background:linear-gradient(135deg,#fff,#e4f8ed); } .card.absent { border-color:var(--red); background:linear-gradient(135deg,#fff,#ffebe8); } .card.late { border-color:var(--orange); background:linear-gradient(135deg,#fff,#fff3d9); } .card.leave { border-color:var(--purple); background:linear-gradient(135deg,#fff,#f0eaff); } .card.offday { border-color:#0891b2; background:linear-gradient(135deg,#fff,#dff7fb); } .card.rate { border-color:#0ea5a5; background:linear-gradient(135deg,#fff,#def7f6); }
-    button.card { min-height:0; width:100%; color:var(--ink); text-align:left; border:1px solid var(--line); border-top:4px solid var(--blue); } button.card.present { border-top-color:var(--green); } button.card.absent { border-top-color:var(--red); } button.card.late { border-top-color:var(--orange); } button.card.leave { border-top-color:var(--purple); } button.card.offday { border-top-color:#0891b2; } button.card:hover, button.card.active { transform:translateY(-2px); box-shadow:0 7px 18px #1d4d7a22; outline:3px solid #bfdbfe; }
-    .card p { margin:0; color:var(--muted); font-size:.86rem; } .card strong { display:block; margin-top:6px; font-size:1.75rem; }
-    .grid { display:grid; grid-template-columns:1fr 1.35fr .9fr; gap:18px; margin-bottom:18px; } .chart { padding:18px; } h2 { margin:0 0 15px; font-size:1.05rem; }
-    .bars { min-height:180px; display:flex; gap:10px; align-items:flex-end; border-bottom:1px solid var(--line); padding:0 5px 25px; overflow-x:auto; }
-    .bar-item { min-width:44px; flex:1; max-width:80px; text-align:center; color:var(--muted); font-size:.72rem; } .bar { min-height:2px; background:linear-gradient(#4f9bd4,var(--blue)); border-radius:5px 5px 0 0; margin-bottom:6px; } .bar-value { color:var(--ink); font-weight:700; font-size:.75rem; }
-    .legend { display:grid; grid-template-columns:1fr auto; gap:9px 12px; font-size:.9rem; } .dot { display:inline-block; width:10px; height:10px; border-radius:50%; margin-right:7px; }
-    .designation-summary { overflow:auto; max-height:245px; } .designation-summary table { font-size:.78rem; } .designation-summary th,.designation-summary td { padding:8px 7px; } .designation-summary th { position:static; } .designation-summary td:first-child { white-space:normal; min-width:140px; } .count-absent { color:var(--red); font-weight:800; } .count-late { color:#b45309; font-weight:800; } .count-leave { color:var(--purple); font-weight:800; }
-    .table-panel { overflow:hidden; } .table-title { padding:18px 18px 10px; display:flex; justify-content:space-between; gap:12px; align-items:baseline; } .table-wrap { overflow:auto; max-height:500px; }
-    table { width:100%; border-collapse:collapse; font-size:.92rem; } th,td { padding:12px 18px; border-top:1px solid var(--line); text-align:left; white-space:nowrap; } th { position:sticky; top:0; background:#f8fafc; color:var(--muted); font-size:.78rem; text-transform:uppercase; letter-spacing:.03em; } tr:hover td { background:#fafcff; }
-    .pill { display:inline-block; border-radius:20px; padding:3px 9px; font-size:.78rem; font-weight:700; background:#edf2f7; } .pill.present { color:#12603d; background:#e0f4e9; } .pill.absent { color:#9b2920; background:#fbe7e5; }
-    .empty { padding:35px 18px; color:var(--muted); text-align:center; }
-    .attendance-message { margin:15px 0 0; padding:10px 14px; border-left:4px solid var(--blue); border-radius:8px; background:#eaf4fc; color:#164b76; font-weight:600; }
-    @media(max-width:1050px) { .filters { grid-template-columns:repeat(3,minmax(0,1fr)); } .kpis { grid-template-columns:repeat(3,1fr); } .grid { grid-template-columns:1fr 1fr; } .grid > :nth-child(2) { grid-column:span 2; } } @media(max-width:760px) { .filters { grid-template-columns:1fr 1fr; } .filters button { grid-column:span 1; } .kpis { grid-template-columns:1fr 1fr; } .grid { grid-template-columns:1fr; } .grid > :nth-child(2) { grid-column:auto; } }
+    :root {
+      --navy:#152b59;
+      --blue:#1677d2;
+      --green:#119c62;
+      --orange:#f59e0b;
+      --red:#e64a3c;
+      --purple:#805ad5;
+      --paper:#f3f7ff;
+      --line:#dce4ef;
+      --ink:#172033;
+      --muted:#64748b;
+    }
+
+    * {
+      box-sizing:border-box;
+    }
+
+    body {
+      margin:0;
+      color:var(--ink);
+      background:var(--paper);
+      font-family:Segoe UI,Roboto,Arial,sans-serif;
+    }
+
+    header {
+      padding:26px max(18px,calc((100% - 1180px)/2));
+      background:linear-gradient(
+        120deg,
+        #172e60 0%,
+        #1769aa 52%,
+        #16a5a0 100%
+      );
+      color:#fff;
+    }
+
+    h1 {
+      margin:0;
+      font-size:clamp(1.5rem,3vw,2.1rem);
+    }
+
+    .sub {
+      margin:7px 0 0;
+      opacity:.85;
+    }
+
+    main {
+      max-width:1180px;
+      margin:0 auto;
+      padding:22px 18px 42px;
+    }
+
+    .panel,
+    .card {
+      background:#fff;
+      border:1px solid var(--line);
+      border-radius:14px;
+      box-shadow:0 2px 10px #152b4810;
+    }
+
+    .filters {
+      display:grid;
+      grid-template-columns:repeat(4,minmax(0,1fr)) auto auto;
+      gap:14px;
+      padding:17px;
+      align-items:end;
+    }
+
+    label {
+      display:block;
+      color:var(--muted);
+      font-size:.82rem;
+      font-weight:650;
+      margin-bottom:6px;
+    }
+
+    input,
+    select,
+    button {
+      font:inherit;
+      border-radius:8px;
+      min-height:40px;
+    }
+
+    input,
+    select {
+      width:100%;
+      border:1px solid #bdc9d8;
+      padding:8px 10px;
+      color:var(--ink);
+      background:#fff;
+    }
+
+    button {
+      border:0;
+      padding:8px 16px;
+      background:var(--blue);
+      color:#fff;
+      cursor:pointer;
+      font-weight:650;
+    }
+
+    button:hover {
+      filter:brightness(.92);
+    }
+
+    #reload {
+      background:#e9f2fa;
+      color:#145282;
+    }
+
+    #reset {
+      background:#64748b;
+    }
+
+    .status {
+      min-height:23px;
+      margin:13px 2px 0;
+      color:var(--muted);
+      font-size:.9rem;
+    }
+
+    .status.error {
+      color:var(--red);
+      font-weight:600;
+    }
+
+    .kpis {
+      display:grid;
+      grid-template-columns:repeat(7,1fr);
+      gap:14px;
+      margin:19px 0;
+    }
+
+    .card {
+      padding:17px;
+      border-top:4px solid var(--blue);
+      background:linear-gradient(135deg,#fff,#edf6ff);
+    }
+
+    .card.present {
+      border-color:var(--green);
+      background:linear-gradient(135deg,#fff,#e4f8ed);
+    }
+
+    .card.absent {
+      border-color:var(--red);
+      background:linear-gradient(135deg,#fff,#ffebe8);
+    }
+
+    .card.late {
+      border-color:var(--orange);
+      background:linear-gradient(135deg,#fff,#fff3d9);
+    }
+
+    .card.leave {
+      border-color:var(--purple);
+      background:linear-gradient(135deg,#fff,#f0eaff);
+    }
+
+    .card.offday {
+      border-color:#0891b2;
+      background:linear-gradient(135deg,#fff,#dff7fb);
+    }
+
+    .card.rate {
+      border-color:#0ea5a5;
+      background:linear-gradient(135deg,#fff,#def7f6);
+    }
+
+    button.card {
+      min-height:0;
+      width:100%;
+      color:var(--ink);
+      text-align:left;
+      border:1px solid var(--line);
+      border-top:4px solid var(--blue);
+    }
+
+    button.card.present {
+      border-top-color:var(--green);
+    }
+
+    button.card.absent {
+      border-top-color:var(--red);
+    }
+
+    button.card.late {
+      border-top-color:var(--orange);
+    }
+
+    button.card.leave {
+      border-top-color:var(--purple);
+    }
+
+    button.card.offday {
+      border-top-color:#0891b2;
+    }
+
+    button.card:hover,
+    button.card.active {
+      transform:translateY(-2px);
+      box-shadow:0 7px 18px #1d4d7a22;
+      outline:3px solid #bfdbfe;
+    }
+
+    .card p {
+      margin:0;
+      color:var(--muted);
+      font-size:.86rem;
+    }
+
+    .card strong {
+      display:block;
+      margin-top:6px;
+      font-size:1.75rem;
+    }
+
+    .grid {
+      display:grid;
+      grid-template-columns:1fr 1.35fr .9fr;
+      gap:18px;
+      margin-bottom:18px;
+    }
+
+    .chart {
+      padding:18px;
+    }
+
+    h2 {
+      margin:0 0 15px;
+      font-size:1.05rem;
+    }
+
+    .bars {
+      min-height:180px;
+      display:flex;
+      gap:10px;
+      align-items:flex-end;
+      border-bottom:1px solid var(--line);
+      padding:0 5px 25px;
+      overflow-x:auto;
+    }
+
+    .bar-item {
+      min-width:44px;
+      flex:1;
+      max-width:80px;
+      text-align:center;
+      color:var(--muted);
+      font-size:.72rem;
+    }
+
+    .bar {
+      min-height:2px;
+      background:linear-gradient(#4f9bd4,var(--blue));
+      border-radius:5px 5px 0 0;
+      margin-bottom:6px;
+    }
+
+    .bar-value {
+      color:var(--ink);
+      font-weight:700;
+      font-size:.75rem;
+    }
+
+    .legend {
+      display:grid;
+      grid-template-columns:1fr auto;
+      gap:9px 12px;
+      font-size:.9rem;
+    }
+
+    .dot {
+      display:inline-block;
+      width:10px;
+      height:10px;
+      border-radius:50%;
+      margin-right:7px;
+    }
+
+    .designation-summary {
+      overflow:auto;
+      max-height:245px;
+    }
+
+    .designation-summary table {
+      font-size:.78rem;
+    }
+
+    .designation-summary th,
+    .designation-summary td {
+      padding:8px 7px;
+    }
+
+    .designation-summary th {
+      position:static;
+    }
+
+    .designation-summary td:first-child {
+      white-space:normal;
+      min-width:140px;
+    }
+
+    .count-absent {
+      color:var(--red);
+      font-weight:800;
+    }
+
+    .count-late {
+      color:#b45309;
+      font-weight:800;
+    }
+
+    .count-leave {
+      color:var(--purple);
+      font-weight:800;
+    }
+
+    .table-panel {
+      overflow:hidden;
+    }
+
+    .table-title {
+      padding:18px 18px 10px;
+      display:flex;
+      justify-content:space-between;
+      gap:12px;
+      align-items:baseline;
+    }
+
+    .table-wrap {
+      overflow:auto;
+      max-height:500px;
+    }
+
+    table {
+      width:100%;
+      border-collapse:collapse;
+      font-size:.92rem;
+    }
+
+    th,
+    td {
+      padding:12px 18px;
+      border-top:1px solid var(--line);
+      text-align:left;
+      white-space:nowrap;
+    }
+
+    th {
+      position:sticky;
+      top:0;
+      background:#f8fafc;
+      color:var(--muted);
+      font-size:.78rem;
+      text-transform:uppercase;
+      letter-spacing:.03em;
+    }
+
+    tr:hover td {
+      background:#fafcff;
+    }
+
+    .pill {
+      display:inline-block;
+      border-radius:20px;
+      padding:3px 9px;
+      font-size:.78rem;
+      font-weight:700;
+      background:#edf2f7;
+    }
+
+    .pill.present {
+      color:#12603d;
+      background:#e0f4e9;
+    }
+
+    .pill.absent {
+      color:#9b2920;
+      background:#fbe7e5;
+    }
+
+    .empty {
+      padding:35px 18px;
+      color:var(--muted);
+      text-align:center;
+    }
+
+    .attendance-message {
+      margin:15px 0 0;
+      padding:10px 14px;
+      border-left:4px solid var(--blue);
+      border-radius:8px;
+      background:#eaf4fc;
+      color:#164b76;
+      font-weight:600;
+    }
+
+    @media(max-width:1050px) {
+      .filters {
+        grid-template-columns:repeat(3,minmax(0,1fr));
+      }
+
+      .kpis {
+        grid-template-columns:repeat(3,1fr);
+      }
+
+      .grid {
+        grid-template-columns:1fr 1fr;
+      }
+
+      .grid > :nth-child(2) {
+        grid-column:span 2;
+      }
+    }
+
+    @media(max-width:760px) {
+      .filters {
+        grid-template-columns:1fr 1fr;
+      }
+
+      .filters button {
+        grid-column:span 1;
+      }
+
+      .kpis {
+        grid-template-columns:1fr 1fr;
+      }
+
+      .grid {
+        grid-template-columns:1fr;
+      }
+
+      .grid > :nth-child(2) {
+        grid-column:auto;
+      }
+    }
   </style>
 </head>
+
 <body>
-  <header><h1>Daily Attendance Dashboard</h1></header>
-  <main>
-    <section class="panel filters">
-      <div><label for="dateFrom">From date</label><input id="dateFrom" type="date"></div>
-      <div><label for="dateTo">To date</label><input id="dateTo" type="date"></div>
-      <div><label for="department">Department</label><select id="department"><option value="">All departments</option></select></div>
-      <div><label for="search">Search staff</label><input id="search" type="search" placeholder="Name or status"></div>
-      <button id="reload" type="button">Reload data</button>
-      <button id="reset" type="button">Reset filters</button>
-    </section>
-    <p id="status" class="status" aria-live="polite">Loading workbook…</p>
-    <p id="attendanceMessage" class="attendance-message">This dashboard shows the current attendance date.</p>
-    <section class="kpis">
-      <button class="card" id="allCard" data-category=""><p>Total staff</p><strong id="total">0</strong></button>
-      <button class="card present" id="presentCard" data-category="present"><p>Present</p><strong id="present">0</strong></button>
-      <button class="card absent" id="absentCard" data-category="absent"><p>Absent</p><strong id="absent">0</strong></button>
-      <button class="card late" id="lateCard" data-category="late"><p>Late</p><strong id="late">0</strong></button>
-      <button class="card leave" id="leaveCard" data-category="leave"><p>On leave</p><strong id="leave">0</strong></button>
-      <button class="card offday" id="offdayCard" data-category="offday"><p>Off day</p><strong id="offday">0</strong></button>
-      <div class="card rate"><p>Attendance rate</p><strong id="rate">—</strong></div>
-    </section>
-    <section class="grid">
-      <div class="panel chart"><h2>Attendance by date</h2><div id="bars" class="bars"></div></div>
-      <div class="panel chart"><h2>Department wise summary</h2><div id="designationSummary" class="designation-summary"></div></div>
-      <div class="panel chart"><h2>Status summary</h2><div id="legend" class="legend"></div></div>
-    </section>
-    <section class="panel table-panel">
-      <div class="table-title"><h2>Attendance records</h2><span id="count" class="sub"></span></div>
-      <div class="table-wrap"><table><thead><tr><th>Date</th><th>Staff name</th><th>Department</th><th>Designation</th><th>Status</th></tr></thead><tbody id="rows"></tbody></table></div>
-    </section>
-  </main>
-  <script>
-  (() => {
-    'use strict';
-    const $ = id => document.getElementById(id);
-    const state = { data: [], category: '' };
-    const fields = { date:['date','attendance date','date of attendance'], id:['employee id','employee code','staff id','id'], name:['staff name','name','employee name','employee'], department:['department','dept','division'], designation:['designation','job title','position'], entryTime:['entry time','in time','check in','check-in time'], status:['status','attendance status'] };
-    const pad = n => String(n).padStart(2,'0');
-    const text = v => v == null ? '' : String(v).trim();
-    const key = v => text(v).toLowerCase().replace(/[._-]+/g,' ').replace(/\s+/g,' ');
 
-    // Converts an Excel date serial, a Date, DD-MM-YYYY, DD/MM/YYYY, YYYY-MM-DD, etc. to YYYY-MM-DD.
-    // Local date parts are used so browser time zones cannot move a date back one day.
-    function normalDate(value) {
-      if (value == null || value === '') return '';
-      if (value instanceof Date && !Number.isNaN(value.getTime())) return `${value.getFullYear()}-${pad(value.getMonth()+1)}-${pad(value.getDate())}`;
-      if (typeof value === 'number' && value > 1000 && window.XLSX) { const p = XLSX.SSF.parse_date_code(value); if (p) return `${p.y}-${pad(p.m)}-${pad(p.d)}`; }
-      const s = text(value); let m;
-      if ((m = s.match(/^(\d{4})[\/.\-](\d{1,2})[\/.\-](\d{1,2})/))) return `${m[1]}-${pad(m[2])}-${pad(m[3])}`;
-      if ((m = s.match(/^(\d{1,2})[\/.\-](\d{1,2})[\/.\-](\d{4})/))) return `${m[3]}-${pad(m[2])}-${pad(m[1])}`;
-      const d = new Date(s); return Number.isNaN(d.getTime()) ? '' : `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
-    }
-    function displayDate(iso) { if (!iso) return '—'; const [y,m,d] = iso.split('-'); return `${d}-${m}-${y}`; }
-    function formatUpdateTime(value) { if (!value) return ''; const d=new Date(value); if(Number.isNaN(d.getTime())) return ''; return new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Dhaka',day:'2-digit',month:'2-digit',year:'numeric',hour:'numeric',minute:'2-digit',hour12:true}).format(d).replace(',', ' at'); }
-    function matchedValue(row, aliases) { const column = Object.keys(row).find(c => aliases.includes(key(c))); return column === undefined ? '' : row[column]; }
-    function entryMinutes(value) { if (value == null || value === '') return null; if (value instanceof Date) return value.getHours()*60+value.getMinutes(); if (typeof value === 'number') { const fraction=((value%1)+1)%1; return Math.round(fraction*1440); } const s=text(value); const match=s.match(/(\d{1,2}):(\d{2})(?:\s*([AaPp][Mm]))?/); if(!match) return null; let hour=Number(match[1]), minute=Number(match[2]); if(match[3]) { const ampm=match[3].toLowerCase(); if(hour===12) hour=0; if(ampm==='pm') hour+=12; } return hour*60+minute; }
-    function formatEntryTime(value) { const minutes=entryMinutes(value); if(minutes === null) return ''; const hour24=Math.floor(minutes/60)%24, minute=minutes%60, suffix=hour24>=12?'PM':'AM', hour12=hour24%12||12; return `${hour12}:${pad(minute)} ${suffix}`; }
-    // Office starts at 10:00 AM. The 4-minute grace period ends at 10:04 AM;
-    // therefore an entry at 10:05 AM or later is counted as Late.
-    function attendanceCategory(row) { const v=key(row.status); if(v.includes('absent')) return 'absent'; if(v.includes('off day')||v.includes('offday')) return 'offday'; if(v.includes('leave')) return 'leave'; const minutes=entryMinutes(row.entryTime); if(minutes !== null && minutes >= 10*60+5) return 'late'; if(v.includes('late')) return 'late'; if(v.includes('present')) return 'present'; return ''; }
-    function statusClass(row) { return attendanceCategory(row); }
-    function isPresent(row) { return attendanceCategory(row)==='present'; }
-    function isLate(row) { return attendanceCategory(row)==='late'; }
-    function isLeave(row) { return attendanceCategory(row)==='leave'; }
-    function displayStatus(row) { const category=attendanceCategory(row); if(category==='late') { const entry=formatEntryTime(row.entryTime); return entry ? `Late (${entry})` : 'Late (after 10:05 AM)'; } return row.status||'Unknown'; }
-    function setStatus(message, error=false) { const el=$('status'); el.textContent=message; el.className='status'+(error?' error':''); }
+<header>
+  <h1>Daily Attendance Dashboard</h1>
+</header>
 
-    async function loadWorkbook() {
-      setStatus('Loading the latest workbook…');
-      try {
-        // Same-origin GitHub Pages path. The unique query and no-store prevent stale Excel responses.
-        const url = new URL('data.xlsx', window.location.href); url.searchParams.set('v', Date.now());
-        const response = await fetch(url, { cache:'no-store', headers:{'Cache-Control':'no-cache'} });
-        if (!response.ok) throw new Error(`data.xlsx could not be loaded (HTTP ${response.status}).`);
-        if (!window.XLSX) throw new Error('The Excel reader did not load. Check your internet connection and refresh.');
-        // Keep Excel dates as their numeric serials. Creating JavaScript Date objects here can
-        // shift a date by one day in some browser time zones (e.g. 23 July becoming 22 July).
-        const fileLastModified=response.headers.get('last-modified');
-        const workbook = XLSX.read(await response.arrayBuffer(), { type:'array', cellDates:false });
-        if (!workbook.SheetNames.length) throw new Error('The workbook has no sheets.');
-        // Uses the first worksheet, as GitHub Pages can only read the file—not choose sheets interactively.
-        const source = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], { defval:'', raw:true });
-        state.data = source.map(row => ({ date:normalDate(matchedValue(row,fields.date)), id:text(matchedValue(row,fields.id)), name:text(matchedValue(row,fields.name)), department:text(matchedValue(row,fields.department)), designation:text(matchedValue(row,fields.designation)), entryTime:matchedValue(row,fields.entryTime), status:text(matchedValue(row,fields.status)) })).filter(r => r.date || r.name || r.department || r.status);
-        if (!state.data.length) throw new Error('No rows were found in the first worksheet.');
-        if (!state.data.some(r => r.date)) throw new Error('No date column was found. Use a header named Date or Attendance Date.');
-        fillDepartments(); initialiseDates(); render();
-        const dates = [...new Set(state.data.map(r=>r.date).filter(Boolean))].sort();
-        const latest=dates.at(-1); $('attendanceMessage').textContent=`This dashboard shows attendance for the current available date: ${displayDate(latest)}.`;
-        const updatedAt=formatUpdateTime(fileLastModified || workbook.Props?.ModifiedDate);
-        setStatus(`Loaded ${state.data.length} records. Latest available date: ${displayDate(latest)}.${updatedAt ? ` Excel last updated: ${updatedAt}.` : ''}`);
-      } catch (error) { state.data=[]; render(); setStatus(error.message+' Make sure data.xlsx is beside index.html and is committed to the same GitHub Pages branch.', true); console.error(error); }
+<main>
+
+  <!-- FILTERS -->
+  <section class="panel filters">
+
+    <div>
+      <label for="dateFrom">From date</label>
+      <input id="dateFrom" type="date">
+    </div>
+
+    <div>
+      <label for="dateTo">To date</label>
+      <input id="dateTo" type="date">
+    </div>
+
+    <div>
+      <label for="department">Department</label>
+      <select id="department">
+        <option value="">All departments</option>
+      </select>
+    </div>
+
+    <div>
+      <label for="search">Search staff</label>
+      <input
+        id="search"
+        type="search"
+        placeholder="Name, ID, designation or status"
+      >
+    </div>
+
+    <button id="reload" type="button">
+      Reload data
+    </button>
+
+    <button id="reset" type="button">
+      Reset filters
+    </button>
+
+  </section>
+
+  <p id="status" class="status" aria-live="polite">
+    Loading workbook…
+  </p>
+
+  <p id="attendanceMessage" class="attendance-message">
+    This dashboard shows the current attendance date.
+  </p>
+
+  <!-- KPI CARDS -->
+  <section class="kpis">
+
+    <button
+      class="card"
+      id="allCard"
+      data-category=""
+      type="button"
+    >
+      <p>Total staff</p>
+      <strong id="total">0</strong>
+    </button>
+
+    <button
+      class="card present"
+      id="presentCard"
+      data-category="present"
+      type="button"
+    >
+      <p>Present</p>
+      <strong id="present">0</strong>
+    </button>
+
+    <button
+      class="card absent"
+      id="absentCard"
+      data-category="absent"
+      type="button"
+    >
+      <p>Absent</p>
+      <strong id="absent">0</strong>
+    </button>
+
+    <button
+      class="card late"
+      id="lateCard"
+      data-category="late"
+      type="button"
+    >
+      <p>Late</p>
+      <strong id="late">0</strong>
+    </button>
+
+    <button
+      class="card leave"
+      id="leaveCard"
+      data-category="leave"
+      type="button"
+    >
+      <p>On leave</p>
+      <strong id="leave">0</strong>
+    </button>
+
+    <button
+      class="card offday"
+      id="offdayCard"
+      data-category="offday"
+      type="button"
+    >
+      <p>Off day</p>
+      <strong id="offday">0</strong>
+    </button>
+
+    <div class="card rate">
+      <p>Attendance rate</p>
+      <strong id="rate">—</strong>
+    </div>
+
+  </section>
+
+  <!-- CHARTS / SUMMARIES -->
+  <section class="grid">
+
+    <div class="panel chart">
+      <h2>Attendance by date</h2>
+      <div id="bars" class="bars"></div>
+    </div>
+
+    <div class="panel chart">
+      <h2>Department wise summary</h2>
+      <div id="designationSummary" class="designation-summary"></div>
+    </div>
+
+    <div class="panel chart">
+      <h2>Status summary</h2>
+      <div id="legend" class="legend"></div>
+    </div>
+
+  </section>
+
+  <!-- TABLE -->
+  <section class="panel table-panel">
+
+    <div class="table-title">
+      <h2>Attendance records</h2>
+      <span id="count" class="sub"></span>
+    </div>
+
+    <div class="table-wrap">
+
+      <table>
+
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Staff name</th>
+            <th>Department</th>
+            <th>Designation</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+
+        <tbody id="rows"></tbody>
+
+      </table>
+
+    </div>
+
+  </section>
+
+</main>
+
+<script>
+
+(() => {
+
+  'use strict';
+
+  const $ = id => document.getElementById(id);
+
+  const state = {
+    data: [],
+    category: ''
+  };
+
+  /*
+    Possible Excel column names.
+  */
+  const fields = {
+
+    date: [
+      'date',
+      'attendance date',
+      'date of attendance'
+    ],
+
+    id: [
+      'employee id',
+      'employee code',
+      'staff id',
+      'id',
+      'emp id',
+      'empid',
+      'emp code'
+    ],
+
+    name: [
+      'staff name',
+      'name',
+      'employee name',
+      'employee'
+    ],
+
+    department: [
+      'department',
+      'dept',
+      'division'
+    ],
+
+    designation: [
+      'designation',
+      'job title',
+      'position'
+    ],
+
+    entryTime: [
+      'entry time',
+      'in time',
+      'check in',
+      'check-in time'
+    ],
+
+    status: [
+      'status',
+      'attendance status'
+    ]
+
+  };
+
+
+  /*
+    Basic utilities.
+  */
+
+  const pad = n =>
+    String(n).padStart(2, '0');
+
+
+  const text = v =>
+    v == null ? '' : String(v).trim();
+
+
+  const key = v =>
+    text(v)
+      .toLowerCase()
+      .replace(/[._-]+/g, ' ')
+      .replace(/\s+/g, ' ');
+
+
+  /*
+    Convert any supported Excel date
+    into YYYY-MM-DD.
+
+    Important:
+    We deliberately avoid creating a JavaScript
+    Date object from Excel serial values because
+    timezone conversion can change 23-07-2026
+    into 22-07-2026.
+  */
+
+  function normalDate(value) {
+
+    if (value == null || value === '') {
+      return '';
     }
-    function fillDepartments() { const select=$('department'), keep=select.value; select.innerHTML='<option value="">All departments</option>'; [...new Set(state.data.map(r=>r.department).filter(Boolean))].sort((a,b)=>a.localeCompare(b)).forEach(d => select.add(new Option(d,d))); select.value=keep; }
-    function initialiseDates() { const dates=[...new Set(state.data.map(r=>r.date).filter(Boolean))].sort(); const latest=dates.at(-1)||''; $('dateFrom').value=latest; $('dateTo').value=latest; }
-    function resetFilters() { $('department').value=''; $('search').value=''; state.category=''; initialiseDates(); render(); }
-    function updateDateMessage() { const from=$('dateFrom').value, to=$('dateTo').value; $('attendanceMessage').textContent=from && from===to ? `This dashboard is showing attendance for ${displayDate(from)}.` : from && to ? `This dashboard is showing attendance from ${displayDate(from)} to ${displayDate(to)}.` : 'This dashboard is showing current attendance data.'; }
-    function baseFiltered() { const from=$('dateFrom').value, to=$('dateTo').value, department=$('department').value, q=key($('search').value); return state.data.filter(r => (!from || r.date>=from) && (!to || r.date<=to) && (!department || r.department===department) && (!q || key(`${r.name} ${r.status} ${r.department} ${attendanceCategory(r)}`).includes(q))); }
-    function filtered() { return baseFiltered().filter(r => !state.category || attendanceCategory(r)===state.category).sort((a,b)=>b.date.localeCompare(a.date)||a.name.localeCompare(b.name)); }
-    function render() { const base=baseFiltered(), rows=filtered(), present=base.filter(isPresent).length, absent=base.filter(r=>attendanceCategory(r)==='absent').length, late=base.filter(isLate).length, leave=base.filter(isLeave).length, offday=base.filter(r=>attendanceCategory(r)==='offday').length, recognised=present+late+absent, totalStaff=new Set(base.map(r=>r.id||r.name).filter(Boolean)).size; $('total').textContent=totalStaff; $('present').textContent=present; $('absent').textContent=absent; $('late').textContent=late; $('leave').textContent=leave; $('offday').textContent=offday; $('rate').textContent=recognised ? `${Math.round((present+late)/recognised*100)}%` : '—'; $('count').textContent=`${rows.length} record${rows.length===1?'':'s'}${state.category ? ` — ${state.category}` : ''}`; updateDateMessage(); document.querySelectorAll('[data-category]').forEach(card=>card.classList.toggle('active',card.dataset.category===state.category)); renderTable(rows); renderBars(rows); renderDesignationSummary(base); renderLegend(rows); }
-    function renderTable(data) { const target=$('rows'); if (!data.length) { target.innerHTML='<tr><td class="empty" colspan="5">No records match the selected filters.</td></tr>'; return; } target.innerHTML=data.map(r=>`<tr><td>${displayDate(r.date)}</td><td>${escapeHtml(r.name||'—')}</td><td>${escapeHtml(r.department||'—')}</td><td>${escapeHtml(r.designation||'—')}</td><td><span class="pill ${statusClass(r)}">${escapeHtml(displayStatus(r))}</span></td></tr>`).join(''); }
-    function renderBars(data) { const group={}; data.forEach(r=>{ if(r.date) group[r.date]=(group[r.date]||0)+1; }); const items=Object.entries(group).sort(([a],[b])=>a.localeCompare(b)); const max=Math.max(...items.map(x=>x[1]),1); $('bars').innerHTML=items.length ? items.map(([d,n])=>`<div class="bar-item"><div class="bar-value">${n}</div><div class="bar" style="height:${Math.max(5,n/max*130)}px"></div>${displayDate(d).slice(0,5)}</div>`).join('') : '<div class="empty">No dates to chart.</div>'; }
-    function renderDesignationSummary(data) { const groups={}; data.forEach(r=>{ const name=r.department||'Not specified'; if(!groups[name]) groups[name]={absent:0,late:0,leave:0}; const category=attendanceCategory(r); if(category==='absent'||category==='late'||category==='leave') groups[name][category]++; }); const items=Object.entries(groups).filter(([,n])=>n.absent+n.late+n.leave>0).sort((a,b)=>(b[1].absent+b[1].late+b[1].leave)-(a[1].absent+a[1].late+a[1].leave)||a[0].localeCompare(b[0])); $('designationSummary').innerHTML=items.length ? `<table><thead><tr><th>Department</th><th>Absent</th><th>Late</th><th>Leave</th></tr></thead><tbody>${items.map(([name,n])=>`<tr><td>${escapeHtml(name)}</td><td class="count-absent">${n.absent}</td><td class="count-late">${n.late}</td><td class="count-leave">${n.leave}</td></tr>`).join('')}</tbody></table>` : '<div class="empty">No absent, late, or leave records.</div>'; }
-    function renderLegend(data) { const labels={present:'Present',absent:'Absent',late:'Late',leave:'Leave',offday:'Off day'}; const colors={present:'#198754',absent:'#e64a3c',late:'#f59e0b',leave:'#805ad5',offday:'#0891b2'}; const counts={}; data.forEach(r=>{ const category=attendanceCategory(r)||'other'; counts[category]=(counts[category]||0)+1; }); const items=Object.entries(counts).sort((a,b)=>b[1]-a[1]); $('legend').innerHTML=items.length ? items.map(([s,n])=>`<span><i class="dot" style="background:${colors[s]||'#64748b'}"></i>${labels[s]||'Other'}</span><strong>${n}</strong>`).join('') : '<span>No data</span><strong>0</strong>'; }
-    function escapeHtml(value) { return String(value).replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c])); }
-    ['dateFrom','dateTo','department','search'].forEach(id => $(id).addEventListener(id==='search'?'input':'change',render)); document.querySelectorAll('[data-category]').forEach(card=>card.addEventListener('click',()=>{ state.category=card.dataset.category; render(); document.querySelector('.table-panel').scrollIntoView({behavior:'smooth',block:'start'}); })); $('reload').addEventListener('click',loadWorkbook); $('reset').addEventListener('click',resetFilters); loadWorkbook();
-  })();
-  </script>
+
+    /*
+      Already a JavaScript Date.
+    */
+
+    if (
+      value instanceof Date &&
+      !Number.isNaN(value.getTime())
+    ) {
+
+      return (
+        value.getFullYear() +
+        '-' +
+        pad(value.getMonth() + 1) +
+        '-' +
+        pad(value.getDate())
+      );
+
+    }
+
+
+    /*
+      Excel serial number.
+    */
+
+    if (
+      typeof value === 'number' &&
+      value > 1000 &&
+      window.XLSX
+    ) {
+
+      const p = XLSX.SSF.parse_date_code(value);
+
+      if (p) {
+
+        return (
+          p.y +
+          '-' +
+          pad(p.m) +
+          '-' +
+          pad(p.d)
+        );
+
+      }
+
+    }
+
+
+    const s = text(value);
+
+    let m;
+
+
+    /*
+      YYYY-MM-DD
+      YYYY/MM/DD
+      YYYY.MM.DD
+    */
+
+    m = s.match(
+      /^(\d{4})[\/\.\-](\d{1,2})[\/\.\-](\d{1,2})/
+    );
+
+    if (m) {
+
+      return (
+        m[1] +
+        '-' +
+        pad(m[2]) +
+        '-' +
+        pad(m[3])
+      );
+
+    }
+
+
+    /*
+      DD-MM-YYYY
+      DD/MM/YYYY
+      DD.MM.YYYY
+    */
+
+    m = s.match(
+      /^(\d{1,2})[\/\.\-](\d{1,2})[\/\.\-](\d{4})/
+    );
+
+    if (m) {
+
+      return (
+        m[3] +
+        '-' +
+        pad(m[2]) +
+        '-' +
+        pad(m[1])
+      );
+
+    }
+
+
+    /*
+      Last resort.
+    */
+
+    const d = new Date(s);
+
+    if (!Number.isNaN(d.getTime())) {
+
+      return (
+        d.getFullYear() +
+        '-' +
+        pad(d.getMonth() + 1) +
+        '-' +
+        pad(d.getDate())
+      );
+
+    }
+
+    return '';
+
+  }
+
+
+  /*
+    Display YYYY-MM-DD as DD-MM-YYYY.
+  */
+
+  function displayDate(iso) {
+
+    if (!iso) {
+      return '—';
+    }
+
+    const [y, m, d] = iso.split('-');
+
+    return `${d}-${m}-${y}`;
+
+  }
+
+
+  /*
+    Format Excel/GitHub modified time.
+  */
+
+  function formatUpdateTime(value) {
+
+    if (!value) {
+      return '';
+    }
+
+    const d = new Date(value);
+
+    if (Number.isNaN(d.getTime())) {
+      return '';
+    }
+
+    return new Intl.DateTimeFormat(
+      'en-GB',
+      {
+        timeZone:'Asia/Dhaka',
+        day:'2-digit',
+        month:'2-digit',
+        year:'numeric',
+        hour:'numeric',
+        minute:'2-digit',
+        hour12:true
+      }
+    )
+    .format(d)
+    .replace(',', ' at');
+
+  }
+
+
+  /*
+    Find a column using the allowed aliases.
+  */
+
+  function matchedValue(row, aliases) {
+
+    const column = Object.keys(row).find(
+      c => aliases.includes(key(c))
+    );
+
+    if (column === undefined) {
+      return '';
+    }
+
+    return row[column];
+
+  }
+
+
+  /*
+    Convert entry time to minutes after midnight.
+  */
+
+  function entryMinutes(value) {
+
+    if (value == null || value === '') {
+      return null;
+    }
+
+
+    /*
+      JavaScript Date.
+    */
+
+    if (value instanceof Date) {
+
+      return (
+        value.getHours() * 60 +
+        value.getMinutes()
+      );
+
+    }
+
+
+    /*
+      Excel time fraction.
+    */
+
+    if (typeof value === 'number') {
+
+      const fraction =
+        ((value % 1) + 1) % 1;
+
+      return Math.round(fraction * 1440);
+
+    }
+
+
+    /*
+      Text time.
+    */
+
+    const s = text(value);
+
+    const match = s.match(
+      /(\d{1,2}):(\d{2})(?:\s*([AaPp][Mm]))?/
+    );
+
+    if (!match) {
+      return null;
+    }
+
+    let hour = Number(match[1]);
+
+    const minute = Number(match[2]);
+
+    if (match[3]) {
+
+      const ampm =
+        match[3].toLowerCase();
+
+      if (hour === 12) {
+        hour = 0;
+      }
+
+      if (ampm === 'pm') {
+        hour += 12;
+      }
+
+    }
+
+    return hour * 60 + minute;
+
+  }
+
+
+  /*
+    Format entry time for display.
+  */
+
+  function formatEntryTime(value) {
+
+    const minutes = entryMinutes(value);
+
+    if (minutes === null) {
+      return '';
+    }
+
+    const hour24 =
+      Math.floor(minutes / 60) % 24;
+
+    const minute =
+      minutes % 60;
+
+    const suffix =
+      hour24 >= 12 ? 'PM' : 'AM';
+
+    const hour12 =
+      hour24 % 12 || 12;
+
+    return `${hour12}:${pad(minute)} ${suffix}`;
+
+  }
+
+
+  /*
+    Attendance classification.
+
+    Office starts at 10:00 AM.
+    10:05 AM or later = Late.
+  */
+
+  function attendanceCategory(row) {
+
+    const v = key(row.status);
+
+
+    if (v.includes('absent')) {
+      return 'absent';
+    }
+
+
+    if (
+      v.includes('off day') ||
+      v.includes('offday')
+    ) {
+      return 'offday';
+    }
+
+
+    if (v.includes('leave')) {
+      return 'leave';
+    }
+
+
+    const minutes =
+      entryMinutes(row.entryTime);
+
+
+    if (
+      minutes !== null &&
+      minutes >= (10 * 60 + 5)
+    ) {
+      return 'late';
+    }
+
+
+    if (v.includes('late')) {
+      return 'late';
+    }
+
+
+    if (v.includes('present')) {
+      return 'present';
+    }
+
+
+    return '';
+
+  }
+
+
+  function statusClass(row) {
+
+    return attendanceCategory(row);
+
+  }
+
+
+  function isPresent(row) {
+
+    return attendanceCategory(row) === 'present';
+
+  }
+
+
+  function isLate(row) {
+
+    return attendanceCategory(row) === 'late';
+
+  }
+
+
+  function isLeave(row) {
+
+    return attendanceCategory(row) === 'leave';
+
+  }
+
+
+  function displayStatus(row) {
+
+    const category =
+      attendanceCategory(row);
+
+
+    if (category === 'late') {
+
+      const entry =
+        formatEntryTime(row.entryTime);
+
+      return entry
+        ? `Late (${entry})`
+        : 'Late (after 10:05 AM)';
+
+    }
+
+
+    return row.status || 'Unknown';
+
+  }
+
+
+  /*
+    Unique staff identity.
+
+    IMPORTANT FIX:
+    Staff name is the primary identity.
+
+    This prevents the same employee from being
+    counted twice when their Employee ID is
+    inconsistent across attendance records.
+
+    Employee ID is only used if Staff Name
+    is unavailable.
+  */
+
+  function staffIdentity(row) {
+
+    const name = key(row.name);
+
+    if (name) {
+      return `name:${name}`;
+    }
+
+
+    const id = key(row.id);
+
+    if (id) {
+      return `id:${id}`;
+    }
+
+
+    return '';
+
+  }
+
+
+  /*
+    Set status message.
+  */
+
+  function setStatus(message, error = false) {
+
+    const el = $('status');
+
+    el.textContent = message;
+
+    el.className =
+      'status' + (error ? ' error' : '');
+
+  }
+
+
+  /*
+    LOAD EXCEL
+  */
+
+  async function loadWorkbook() {
+
+    setStatus(
+      'Loading the latest workbook…'
+    );
+
+
+    try {
+
+      if (!window.XLSX) {
+
+        throw new Error(
+          'The Excel reader did not load. Check your internet connection and refresh.'
+        );
+
+      }
+
+
+      /*
+        Same-origin GitHub Pages file.
+
+        Date.now() prevents stale browser/CDN cache.
+      */
+
+      const url =
+        new URL(
+          'data.xlsx',
+          window.location.href
+        );
+
+      url.searchParams.set(
+        'v',
+        Date.now()
+      );
+
+
+      const response =
+        await fetch(
+          url.toString(),
+          {
+            cache:'no-store',
+            headers:{
+              'Cache-Control':'no-cache'
+            }
+          }
+        );
+
+
+      if (!response.ok) {
+
+        throw new Error(
+          `data.xlsx could not be loaded (HTTP ${response.status}).`
+        );
+
+      }
+
+
+      const fileLastModified =
+        response.headers.get(
+          'last-modified'
+        );
+
+
+      /*
+        cellDates:false is intentional.
+
+        This keeps Excel date serial numbers
+        as numbers and allows normalDate()
+        to interpret them safely.
+      */
+
+      const workbook =
+        XLSX.read(
+          await response.arrayBuffer(),
+          {
+            type:'array',
+            cellDates:false
+          }
+        );
+
+
+      if (!workbook.SheetNames.length) {
+
+        throw new Error(
+          'The workbook has no sheets.'
+        );
+
+      }
+
+
+      /*
+        Read first worksheet.
+      */
+
+      const sheet =
+        workbook.Sheets[
+          workbook.SheetNames[0]
+        ];
+
+
+      const source =
+        XLSX.utils.sheet_to_json(
+          sheet,
+          {
+            defval:'',
+            raw:true
+          }
+        );
+
+
+      /*
+        Convert Excel rows into dashboard records.
+      */
+
+      state.data =
+        source
+          .map(row => ({
+
+            date:
+              normalDate(
+                matchedValue(
+                  row,
+                  fields.date
+                )
+              ),
+
+            id:
+              text(
+                matchedValue(
+                  row,
+                  fields.id
+                )
+              ),
+
+            name:
+              text(
+                matchedValue(
+                  row,
+                  fields.name
+                )
+              ),
+
+            department:
+              text(
+                matchedValue(
+                  row,
+                  fields.department
+                )
+              ),
+
+            designation:
+              text(
+                matchedValue(
+                  row,
+                  fields.designation
+                )
+              ),
+
+            entryTime:
+              matchedValue(
+                row,
+                fields.entryTime
+              ),
+
+            status:
+              text(
+                matchedValue(
+                  row,
+                  fields.status
+                )
+              )
+
+          }))
+          .filter(
+            r =>
+              r.date ||
+              r.name ||
+              r.department ||
+              r.status
+          );
+
+
+      if (!state.data.length) {
+
+        throw new Error(
+          'No rows were found in the first worksheet.'
+        );
+
+      }
+
+
+      if (
+        !state.data.some(
+          r => r.date
+        )
+      ) {
+
+        throw new Error(
+          'No date column was found. Use a header named Date or Attendance Date.'
+        );
+
+      }
+
+
+      /*
+        Update dashboard.
+      */
+
+      fillDepartments();
+
+      initialiseDates();
+
+      render();
+
+
+      /*
+        Find latest available date.
+      */
+
+      const dates =
+        [
+          ...new Set(
+            state.data
+              .map(r => r.date)
+              .filter(Boolean)
+          )
+        ].sort();
+
+
+      const latest =
+        dates.length
+          ? dates[dates.length - 1]
+          : '';
+
+
+      $('attendanceMessage').textContent =
+        latest
+          ? `This dashboard shows attendance for the current available date: ${displayDate(latest)}.`
+          : 'This dashboard shows current attendance data.';
+
+
+      /*
+        Show workbook update information.
+      */
+
+      const updatedAt =
+        formatUpdateTime(
+          fileLastModified ||
+          workbook.Props?.ModifiedDate
+        );
+
+
+      setStatus(
+        `Loaded ${state.data.length} records. Latest available date: ${displayDate(latest)}.` +
+        (
+          updatedAt
+            ? ` Excel last updated: ${updatedAt}.`
+            : ''
+        )
+      );
+
+
+    } catch (error) {
+
+      state.data = [];
+
+      render();
+
+      setStatus(
+        error.message +
+        ' Make sure data.xlsx is beside index.html and is committed to the same GitHub Pages branch.',
+        true
+      );
+
+      console.error(error);
+
+    }
+
+  }
+
+
+  /*
+    DEPARTMENT FILTER
+  */
+
+  function fillDepartments() {
+
+    const select =
+      $('department');
+
+    const keep =
+      select.value;
+
+
+    select.innerHTML =
+      '<option value="">All departments</option>';
+
+
+    const departments =
+      [
+        ...new Set(
+          state.data
+            .map(r => r.department)
+            .filter(Boolean)
+        )
+      ]
+      .sort(
+        (a,b) =>
+          a.localeCompare(b)
+      );
+
+
+    departments.forEach(
+      department => {
+
+        select.add(
+          new Option(
+            department,
+            department
+          )
+        );
+
+      }
+    );
+
+
+    select.value =
+      keep;
+
+  }
+
+
+  /*
+    Automatically select latest available date.
+  */
+
+  function initialiseDates() {
+
+    const dates =
+      [
+        ...new Set(
+          state.data
+            .map(r => r.date)
+            .filter(Boolean)
+        )
+      ].sort();
+
+
+    const latest =
+      dates.length
+        ? dates[dates.length - 1]
+        : '';
+
+
+    $('dateFrom').value =
+      latest;
+
+    $('dateTo').value =
+      latest;
+
+  }
+
+
+  /*
+    Reset filters.
+  */
+
+  function resetFilters() {
+
+    $('department').value = '';
+
+    $('search').value = '';
+
+    state.category = '';
+
+    initialiseDates();
+
+    render();
+
+  }
+
+
+  /*
+    Date message.
+  */
+
+  function updateDateMessage() {
+
+    const from =
+      $('dateFrom').value;
+
+    const to =
+      $('dateTo').value;
+
+
+    if (
+      from &&
+      from === to
+    ) {
+
+      $('attendanceMessage').textContent =
+        `This dashboard is showing attendance for ${displayDate(from)}.`;
+
+      return;
+
+    }
+
+
+    if (from && to) {
+
+      $('attendanceMessage').textContent =
+        `This dashboard is showing attendance from ${displayDate(from)} to ${displayDate(to)}.`;
+
+      return;
+
+    }
+
+
+    $('attendanceMessage').textContent =
+      'This dashboard is showing current attendance data.';
+
+  }
+
+
+  /*
+    BASE FILTER.
+
+    Search includes:
+    - Staff name
+    - Employee ID
+    - Department
+    - Designation
+    - Status
+    - Attendance category
+  */
+
+  function baseFiltered() {
+
+    const from =
+      $('dateFrom').value;
+
+    const to =
+      $('dateTo').value;
+
+    const department =
+      $('department').value;
+
+    const q =
+      key(
+        $('search').value
+      );
+
+
+    return state.data.filter(
+      r => {
+
+        const dateOK =
+          (!from || r.date >= from) &&
+          (!to || r.date <= to);
+
+
+        const departmentOK =
+          !department ||
+          r.department === department;
+
+
+        const searchText =
+          key(
+            [
+              r.name,
+              r.id,
+              r.department,
+              r.designation,
+              r.status,
+              attendanceCategory(r)
+            ].join(' ')
+          );
+
+
+        const searchOK =
+          !q ||
+          searchText.includes(q);
+
+
+        return (
+          dateOK &&
+          departmentOK &&
+          searchOK
+        );
+
+      }
+    );
+
+  }
+
+
+  /*
+    Apply status/category filter.
+  */
+
+  function filtered() {
+
+    return baseFiltered()
+
+      .filter(
+        r =>
+          !state.category ||
+          attendanceCategory(r) ===
+            state.category
+      )
+
+      .sort(
+        (a,b) =>
+          b.date.localeCompare(a.date) ||
+          a.name.localeCompare(b.name)
+      );
+
+  }
+
+
+  /*
+    MAIN RENDER FUNCTION.
+  */
+
+  function render() {
+
+    const base =
+      baseFiltered();
+
+    const rows =
+      filtered();
+
+
+    /*
+      Count attendance records.
+    */
+
+    const present =
+      base.filter(
+        isPresent
+      ).length;
+
+
+    const absent =
+      base.filter(
+        r =>
+          attendanceCategory(r) ===
+          'absent'
+      ).length;
+
+
+    const late =
+      base.filter(
+        isLate
+      ).length;
+
+
+    const leave =
+      base.filter(
+        isLeave
+      ).length;
+
+
+    const offday =
+      base.filter(
+        r =>
+          attendanceCategory(r) ===
+          'offday'
+      ).length;
+
+
+    /*
+      IMPORTANT FIX:
+
+      Count unique employees.
+
+      Example:
+
+      Mamnun
+      01-Aug Present
+      02-Aug Present
+      03-Aug Present
+
+      = 1 staff
+
+      NOT 3 staff.
+    */
+
+    const uniqueStaff =
+      new Set(
+        base
+          .map(
+            staffIdentity
+          )
+          .filter(Boolean)
+      );
+
+
+    const totalStaff =
+      uniqueStaff.size;
+
+
+    /*
+      Attendance rate.
+
+      This is record-based:
+
+      (Present + Late)
+      /
+      (Present + Late + Absent)
+
+      Leave and Off day are excluded.
+    */
+
+    const recognised =
+      present +
+      late +
+      absent;
+
+
+    const rate =
+      recognised
+        ? `${Math.round(
+            ((present + late) /
+              recognised) *
+              100
+          )}%`
+        : '—';
+
+
+    /*
+      Update KPI cards.
+    */
+
+    $('total').textContent =
+      totalStaff;
+
+    $('present').textContent =
+      present;
+
+    $('absent').textContent =
+      absent;
+
+    $('late').textContent =
+      late;
+
+    $('leave').textContent =
+      leave;
+
+    $('offday').textContent =
+      offday;
+
+    $('rate').textContent =
+      rate;
+
+
+    /*
+      Table record count.
+    */
+
+    $('count').textContent =
+      `${rows.length} record${rows.length === 1 ? '' : 's'}` +
+      (
+        state.category
+          ? ` — ${state.category}`
+          : ''
+      );
+
+
+    updateDateMessage();
+
+
+    /*
+      Active KPI filter.
+    */
+
+    document
+      .querySelectorAll(
+        '[data-category]'
+      )
+      .forEach(
+        card => {
+
+          card.classList.toggle(
+            'active',
+            card.dataset.category ===
+              state.category
+          );
+
+        }
+      );
+
+
+    renderTable(rows);
+
+    renderBars(rows);
+
+    renderDesignationSummary(base);
+
+    renderLegend(rows);
+
+  }
+
+
+  /*
+    TABLE.
+  */
+
+  function renderTable(data) {
+
+    const target =
+      $('rows');
+
+
+    if (!data.length) {
+
+      target.innerHTML =
+        '<tr><td class="empty" colspan="5">No records match the selected filters.</td></tr>';
+
+      return;
+
+    }
+
+
+    target.innerHTML =
+      data
+        .map(
+          r => `
+
+            <tr>
+
+              <td>
+                ${displayDate(r.date)}
+              </td>
+
+              <td>
+                ${escapeHtml(
+                  r.name || '—'
+                )}
+              </td>
+
+              <td>
+                ${escapeHtml(
+                  r.department || '—'
+                )}
+              </td>
+
+              <td>
+                ${escapeHtml(
+                  r.designation || '—'
+                )}
+              </td>
+
+              <td>
+                <span class="pill ${statusClass(r)}">
+                  ${escapeHtml(
+                    displayStatus(r)
+                  )}
+                </span>
+              </td>
+
+            </tr>
+
+          `
+        )
+        .join('');
+
+  }
+
+
+  /*
+    ATTENDANCE BY DATE.
+  */
+
+  function renderBars(data) {
+
+    const group = {};
+
+
+    data.forEach(
+      r => {
+
+        if (!r.date) {
+          return;
+        }
+
+        group[r.date] =
+          (group[r.date] || 0) + 1;
+
+      }
+    );
+
+
+    const items =
+      Object.entries(group)
+        .sort(
+          ([a],[b]) =>
+            a.localeCompare(b)
+        );
+
+
+    const max =
+      Math.max(
+        ...items.map(
+          x => x[1]
+        ),
+        1
+      );
+
+
+    $('bars').innerHTML =
+      items.length
+
+        ? items
+            .map(
+              ([d,n]) => `
+
+                <div class="bar-item">
+
+                  <div class="bar-value">
+                    ${n}
+                  </div>
+
+                  <div
+                    class="bar"
+                    style="height:${Math.max(
+                      5,
+                      n / max * 130
+                    )}px"
+                  ></div>
+
+                  ${displayDate(d).slice(0,5)}
+
+                </div>
+
+              `
+            )
+            .join('')
+
+        : '<div class="empty">No dates to chart.</div>';
+
+  }
+
+
+  /*
+    DEPARTMENT SUMMARY.
+  */
+
+  function renderDesignationSummary(data) {
+
+    const groups = {};
+
+
+    data.forEach(
+      r => {
+
+        const name =
+          r.department ||
+          'Not specified';
+
+
+        if (!groups[name]) {
+
+          groups[name] = {
+            absent:0,
+            late:0,
+            leave:0
+          };
+
+        }
+
+
+        const category =
+          attendanceCategory(r);
+
+
+        if (
+          category === 'absent' ||
+          category === 'late' ||
+          category === 'leave'
+        ) {
+
+          groups[name][category]++;
+
+        }
+
+      }
+    );
+
+
+    const items =
+      Object.entries(groups)
+
+        .filter(
+          ([,n]) =>
+            n.absent +
+            n.late +
+            n.leave > 0
+        )
+
+        .sort(
+          (a,b) => {
+
+            const totalA =
+              a[1].absent +
+              a[1].late +
+              a[1].leave;
+
+            const totalB =
+              b[1].absent +
+              b[1].late +
+              b[1].leave;
+
+
+            return (
+              totalB - totalA ||
+              a[0].localeCompare(
+                b[0]
+              )
+            );
+
+          }
+        );
+
+
+    $('designationSummary').innerHTML =
+
+      items.length
+
+        ? `
+
+          <table>
+
+            <thead>
+
+              <tr>
+                <th>Department</th>
+                <th>Absent</th>
+                <th>Late</th>
+                <th>Leave</th>
+              </tr>
+
+            </thead>
+
+            <tbody>
+
+              ${items
+                .map(
+                  ([name,n]) => `
+
+                    <tr>
+
+                      <td>
+                        ${escapeHtml(name)}
+                      </td>
+
+                      <td class="count-absent">
+                        ${n.absent}
+                      </td>
+
+                      <td class="count-late">
+                        ${n.late}
+                      </td>
+
+                      <td class="count-leave">
+                        ${n.leave}
+                      </td>
+
+                    </tr>
+
+                  `
+                )
+                .join('')}
+
+            </tbody>
+
+          </table>
+
+        `
+
+        : '<div class="empty">No absent, late, or leave records.</div>';
+
+  }
+
+
+  /*
+    STATUS LEGEND.
+  */
+
+  function renderLegend(data) {
+
+    const labels = {
+
+      present:'Present',
+      absent:'Absent',
+      late:'Late',
+      leave:'Leave',
+      offday:'Off day'
+
+    };
+
+
+    const colors = {
+
+      present:'#198754',
+      absent:'#e64a3c',
+      late:'#f59e0b',
+      leave:'#805ad5',
+      offday:'#0891b2'
+
+    };
+
+
+    const counts = {};
+
+
+    data.forEach(
+      r => {
+
+        const category =
+          attendanceCategory(r) ||
+          'other';
+
+
+        counts[category] =
+          (counts[category] || 0) + 1;
+
+      }
+    );
+
+
+    const items =
+      Object.entries(counts)
+        .sort(
+          (a,b) =>
+            b[1] - a[1]
+        );
+
+
+    $('legend').innerHTML =
+
+      items.length
+
+        ? items
+            .map(
+              ([s,n]) => `
+
+                <span>
+
+                  <i
+                    class="dot"
+                    style="background:${
+                      colors[s] ||
+                      '#64748b'
+                    }"
+                  ></i>
+
+                  ${
+                    labels[s] ||
+                    'Other'
+                  }
+
+                </span>
+
+                <strong>
+                  ${n}
+                </strong>
+
+              `
+            )
+            .join('')
+
+        : '<span>No data</span><strong>0</strong>';
+
+  }
+
+
+  /*
+    Prevent HTML injection in table values.
+  */
+
+  function escapeHtml(value) {
+
+    return String(value)
+      .replace(
+        /[&<>'"]/g,
+        c => ({
+
+          '&':'&amp;',
+          '<':'&lt;',
+          '>':'&gt;',
+          "'":'&#39;',
+          '"':'&quot;'
+
+        }[c])
+      );
+
+  }
+
+
+  /*
+    FILTER EVENTS.
+  */
+
+  $('dateFrom')
+    .addEventListener(
+      'change',
+      render
+    );
+
+
+  $('dateTo')
+    .addEventListener(
+      'change',
+      render
+    );
+
+
+  $('department')
+    .addEventListener(
+      'change',
+      render
+    );
+
+
+  $('search')
+    .addEventListener(
+      'input',
+      render
+    );
+
+
+  /*
+    KPI CARD FILTERS.
+  */
+
+  document
+    .querySelectorAll(
+      '[data-category]'
+    )
+    .forEach(
+      card => {
+
+        card.addEventListener(
+          'click',
+          () => {
+
+            state.category =
+              card.dataset.category;
+
+
+            render();
+
+
+            document
+              .querySelector(
+                '.table-panel'
+              )
+              .scrollIntoView({
+                behavior:'smooth',
+                block:'start'
+              });
+
+          }
+        );
+
+      }
+    );
+
+
+  /*
+    Reload workbook.
+  */
+
+  $('reload')
+    .addEventListener(
+      'click',
+      loadWorkbook
+    );
+
+
+  /*
+    Reset filters.
+  */
+
+  $('reset')
+    .addEventListener(
+      'click',
+      resetFilters
+    );
+
+
+  /*
+    Initial load.
+  */
+
+  loadWorkbook();
+
+
+})();
+
+</script>
+
 </body>
 </html>
