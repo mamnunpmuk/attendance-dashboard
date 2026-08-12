@@ -1710,6 +1710,131 @@
 
 
   /*
+    Find the most recent working days.
+
+    A date counts as a "working day" if
+    fewer than half its records are Off day
+    - this excludes weekly holidays/off days
+    from the trend chart.
+  */
+
+  function workingDates(count = 3) {
+
+    const byDate = {};
+
+    state.data.forEach(
+      r => {
+
+        if (!r.date) {
+          return;
+        }
+
+        if (!byDate[r.date]) {
+
+          byDate[r.date] = {
+            total:0,
+            offday:0
+          };
+
+        }
+
+        byDate[r.date].total++;
+
+        if (
+          attendanceCategory(r) ===
+          'offday'
+        ) {
+
+          byDate[r.date].offday++;
+
+        }
+
+      }
+    );
+
+    return Object.entries(byDate)
+
+      .filter(
+        ([,n]) =>
+          n.offday < n.total / 2
+      )
+
+      .map(([d]) => d)
+
+      .sort()
+
+      .slice(-count);
+
+  }
+
+
+  /*
+    Same as baseFiltered, but ignores the
+    From/To date range - used for the
+    "Attendance by date" trend chart so it
+    always shows the last few working days
+    regardless of which single date is
+    selected in the filters above.
+  */
+
+  function chartFiltered() {
+
+    const department =
+      $('department').value;
+
+    const q =
+      key(
+        $('search').value
+      );
+
+
+    return state.data
+
+      .filter(
+        r => {
+
+          const departmentOK =
+            !department ||
+            r.department === department;
+
+
+          const searchText =
+            key(
+              [
+                r.name,
+                r.id,
+                r.department,
+                r.designation,
+                r.status,
+                attendanceCategory(r)
+              ].join(' ')
+            );
+
+
+          const searchOK =
+            !q ||
+            searchText.includes(q);
+
+
+          return (
+            departmentOK &&
+            searchOK
+          );
+
+        }
+      )
+
+      .filter(
+        r =>
+          !state.category ||
+          attendanceCategory(r) ===
+            state.category
+      );
+
+  }
+
+
+  /*
     Apply status/category filter.
   */
 
@@ -1909,7 +2034,7 @@
 
     renderTable(rows);
 
-    renderBars(rows);
+    renderBars(chartFiltered());
 
     renderDesignationSummary(base);
 
@@ -1990,29 +2115,38 @@
 
   function renderBars(data) {
 
+    const days =
+      workingDates(3);
+
     const group = {};
+
+    days.forEach(
+      d => {
+        group[d] = 0;
+      }
+    );
 
 
     data.forEach(
       r => {
 
-        if (!r.date) {
+        if (
+          !r.date ||
+          !(r.date in group)
+        ) {
           return;
         }
 
-        group[r.date] =
-          (group[r.date] || 0) + 1;
+        group[r.date]++;
 
       }
     );
 
 
     const items =
-      Object.entries(group)
-        .sort(
-          ([a],[b]) =>
-            a.localeCompare(b)
-        );
+      days.map(
+        d => [d, group[d]]
+      );
 
 
     const max =
@@ -2115,27 +2249,8 @@
         )
 
         .sort(
-          (a,b) => {
-
-            const totalA =
-              a[1].absent +
-              a[1].late +
-              a[1].leave;
-
-            const totalB =
-              b[1].absent +
-              b[1].late +
-              b[1].leave;
-
-
-            return (
-              totalB - totalA ||
-              a[0].localeCompare(
-                b[0]
-              )
-            );
-
-          }
+          (a,b) =>
+            a[0].localeCompare(b[0])
         );
 
 
