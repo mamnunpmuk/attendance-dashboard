@@ -1281,13 +1281,36 @@
 
 
       /*
-        Read first worksheet.
+        Read the data sheet.
+
+        FIX: pick the sheet by name instead of
+        always taking the first one - workbooks
+        often have a "Dashboard" or summary sheet
+        first, with the actual row data on a sheet
+        named "Clean Data" (or similar) elsewhere.
+        Falls back to the first sheet if none of
+        the preferred names are found.
       */
 
+      const preferredNames = [
+        'clean data',
+        'data',
+        'attendance'
+      ];
+
+      let sheetName =
+        workbook.SheetNames.find(
+          n => preferredNames.includes(
+            n.trim().toLowerCase()
+          )
+        );
+
+      if (!sheetName) {
+        sheetName = workbook.SheetNames[0];
+      }
+
       const sheet =
-        workbook.Sheets[
-          workbook.SheetNames[0]
-        ];
+        workbook.Sheets[sheetName];
 
 
       const source =
@@ -1704,6 +1727,7 @@
       .sort(
         (a,b) =>
           b.date.localeCompare(a.date) ||
+          a.department.localeCompare(b.department) ||
           a.name.localeCompare(b.name)
       );
 
